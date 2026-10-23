@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>數學打地鼠大挑戰 - 108課綱互動解題遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Fredoka:wght@600;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #1e3a1e;
+        }
+
+        .math-font {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+
+        /* 藍天草地漸層背景 */
+        .meadow-sky {
+            background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 55%, #86efac 55%, #22c55e 75%, #15803d 100%);
+        }
+
+        /* 木質立體看板樣式 */
+        .wood-board {
+            background: linear-gradient(180deg, #d97706 0%, #b45309 50%, #92400e 100%);
+            border: 5px solid #451a03;
+            box-shadow: 0 10px 0 #451a03, 0 15px 25px rgba(0,0,0,0.45), inset 0 3px 0 rgba(255,255,255,0.35);
+        }
+
+        .wood-inner {
+            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px solid #78350f;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* 傳統街機立體地洞與土堆 */
+        .dirt-mound {
+            background: radial-gradient(ellipse at 50% 35%, #9a5b32 0%, #713f12 65%, #422006 100%);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.45), inset 0 3px 5px rgba(255,255,255,0.25);
+            border: 3px solid #3b1905;
+        }
+
+        .hole-pit {
+            background: radial-gradient(ellipse at 50% 60%, #090502 0%, #1c0f07 70%, #361d0d 100%);
+            box-shadow: inset 0 12px 20px rgba(0,0,0,0.95), inset 0 -3px 6px rgba(255,255,255,0.08);
+        }
+
+        /* 地鼠鑽出遮罩容器：讓地鼠從洞口底部往上冒出 */
+        .mole-mask {
+            clip-path: inset(-130px -30px 0px -30px);
+        }
+
+        /* 地鼠上下移動過渡 */
+        .mole-wrapper {
+            transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(105%);
+        }
+        .mole-wrapper.up {
+            transform: translateY(4%);
+        }
+        .mole-wrapper.hit-correct {
+            animation: moleSquishCorrect 0.65s ease-out forwards;
+        }
+        .mole-wrapper.hit-wrong {
+            animation: moleSquishWrong 0.55s ease-in forwards;
+        }
+
+        @keyframes moleSquishCorrect {
+            0% { transform: translateY(4%) scale(1, 1); }
+            25% { transform: translateY(18%) scale(1.3, 0.65); }
+            55% { transform: translateY(-8%) scale(0.95, 1.08) rotate(-5deg); }
+            80% { transform: translateY(-4%) scale(1, 1) rotate(5deg); opacity: 1; }
+            100% { transform: translateY(105%) scale(0.8); opacity: 0; }
+        }
+
+        @keyframes moleSquishWrong {
+            0% { transform: translateY(4%) scale(1, 1); }
+            20% { transform: translateY(22%) scale(1.25, 0.75); }
+            50% { transform: translateX(-8px) translateY(15%); }
+            75% { transform: translateX(8px) translateY(35%); }
+            100% { transform: translateY(105%); }
+        }
+
+        /* 充氣木槌下砸動畫 */
+        @keyframes hammerStrike {
+            0% { transform: translate(35px, -65px) rotate(45deg) scale(0.85); opacity: 0; }
+            20% { transform: translate(20px, -50px) rotate(50deg) scale(1); opacity: 1; }
+            50% { transform: translate(-12px, 10px) rotate(-25deg) scale(1.15, 0.85); opacity: 1; }
+            75% { transform: translate(-5px, -5px) rotate(-12deg) scale(1); opacity: 1; }
+            100% { transform: translate(20px, -45px) rotate(25deg) scale(0.9); opacity: 0; }
+        }
+        .hammer-anim {
+            animation: hammerStrike 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transform-origin: 80% 85%;
+        }
+
+        /* 畫面震動特效 */
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 5px); }
+            40% { transform: translate(6px, -5px); }
+            60% { transform: translate(-4px, 3px); }
+            80% { transform: translate(4px, -3px); }
+        }
+        .shake-active {
+            animation: screenShake 0.32s ease-in-out;
+        }
+
+        /* 飄浮加扣分特效 */
+        @keyframes floatScore {
+            0% { transform: translate(-50%, 10px) scale(0.5); opacity: 0; }
+            30% { transform: translate(-50%, -18px) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -38px) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -55px) scale(0.9); opacity: 0; }
+        }
+        .score-float {
+            animation: floatScore 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* 雲朵緩慢飄動 */
+        @keyframes floatCloud {
+            0% { transform: translateX(-10%); }
+            50% { transform: translateX(10%); }
+            100% { transform: translateX(-10%); }
+        }
+        .cloud-anim {
+            animation: floatCloud 18s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between meadow-sky relative overflow-x-hidden">
+
+    <!-- 裝飾背景：太陽與雲朵 -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <!-- 太陽 -->
+        <div class="absolute top-6 right-8 w-20 h-20 md:w-28 md:h-28 rounded-full bg-yellow-300 shadow-[0_0_50px_#fef08a] border-4 border-yellow-100 flex items-center justify-center text-3xl md:text-5xl">
+            ☀️
+        </div>
+        <!-- 雲朵 -->
+        <div class="cloud-anim absolute top-8 left-[8%] opacity-85 text-6xl md:text-7xl select-none">☁️</div>
+        <div class="cloud-anim absolute top-20 left-[55%] opacity-75 text-5xl md:text-6xl select-none" style="animation-delay: -7s;">☁️</div>
+        <!-- 遠景翠綠山丘 -->
+        <div class="absolute top-[46%] -left-[10%] w-[70%] h-36 bg-emerald-500 rounded-[100%] border-t-4 border-emerald-300/60 shadow-inner"></div>
+        <div class="absolute top-[44%] -right-[10%] w-[75%] h-44 bg-green-500 rounded-[100%] border-t-4 border-green-300/60 shadow-inner"></div>
+    </div>
+
+    <!-- 頂部導覽列 -->
+    <header class="relative z-20 bg-amber-950/90 border-b-4 border-amber-800 text-amber-100 px-4 py-2.5 shadow-lg flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+            <span class="text-2xl md:text-3xl">🐹</span>
+            <div>
+                <h1 class="text-lg md:text-xl font-black tracking-wide text-yellow-300 drop-shadow">數學打地鼠大挑戰</h1>
+                <p id="current-scope-badge" class="text-xs text-amber-200/90">請選擇年級、學期與考試範圍</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="window.openLeaderboard()" class="px-3 py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 border-2 border-yellow-600 text-amber-950 text-xs md:text-sm font-black transition shadow">
+                🏆 排行榜
+            </button>
+            <button id="btn-sound" onclick="toggleMute()" class="px-3 py-1.5 rounded-xl bg-amber-800 hover:bg-amber-700 border-2 border-amber-600 text-xs md:text-sm font-bold transition shadow">
+                🔊 音效: 開
+            </button>
+            <button id="btn-fullscreen" onclick="toggleFullscreen()" class="px-3 py-1.5 rounded-xl bg-indigo-700 hover:bg-indigo-600 border-2 border-indigo-400 text-white text-xs md:text-sm font-bold transition shadow">
+                ⛶ 全螢幕
+            </button>
+            <button id="btn-back-menu" onclick="returnToMenu()" class="hidden px-3 py-1.5 rounded-xl bg-rose-700 hover:bg-rose-600 border-2 border-rose-400 text-white text-xs md:text-sm font-bold transition shadow">
+                ⚙️ 重選範圍
+            </button>
+        </div>
+    </header>
+
+    <!-- 主內容區 -->
+    <main class="relative z-10 flex-grow flex flex-col items-center justify-center px-3 py-4 w-full max-w-5xl mx-auto">
+
+        <!-- ================= 畫面一：開始選單（年級/學期/段考範圍設定） ================= -->
+        <section id="menu-screen" class="w-full max-w-3xl wood-board rounded-3xl p-4 md:p-6 transition-all">
+            <div class="wood-inner rounded-2xl p-5 md:p-7 text-amber-950">
+                <div class="text-center mb-5">
+                    <div class="inline-block bg-amber-500/20 border-2 border-amber-600 rounded-full px-4 py-1 text-xs md:text-sm font-extrabold text-amber-900 mb-2">
+                        🎯 108 課綱國小～國中數學互動題庫
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-black text-amber-950">請選擇挑戰程度與評量範圍</h2>
+                    <p class="text-xs md:text-sm text-amber-800 mt-1">地鼠會舉著不同答案牌從地洞冒出，看準題目敲中「正確答案」得分，敲錯會扣分喔！</p>
+                </div>
+
+                <!-- 步驟 1：選擇年級 (小一 ~ 國三) -->
+                <div class="mb-5">
+                    <label class="block text-sm md:text-base font-black text-amber-900 mb-2 flex items-center gap-1.5">
+                        <span class="bg-amber-800 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs">1</span>
+                        選擇年級程度（小一 ～ 國三）：
+                    </label>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-2" id="grade-primary-group">
+                        <!-- 小一至小六 -->
+                        <button onclick="selectGrade(1)" id="grade-btn-1" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">小一</button>
+                        <button onclick="selectGrade(2)" id="grade-btn-2" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">小二</button>
+                        <button onclick="selectGrade(3)" id="grade-btn-3" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">小三</button>
+                        <button onclick="selectGrade(4)" id="grade-btn-4" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">小四</button>
+                        <button onclick="selectGrade(5)" id="grade-btn-5" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">小五</button>
+                        <button onclick="selectGrade(6)" id="grade-btn-6" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">小六</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2" id="grade-junior-group">
+                        <!-- 國一至國三 -->
+                        <button onclick="selectGrade(7)" id="grade-btn-7" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">國一 (七年級)</button>
+                        <button onclick="selectGrade(8)" id="grade-btn-8" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">國二 (八年級)</button>
+                        <button onclick="selectGrade(9)" id="grade-btn-9" class="grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 transition-all">國三 (九年級)</button>
+                    </div>
+                </div>
+
+                <!-- 步驟 2：選擇學期 (上學期 / 下學期) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label class="block text-sm md:text-base font-black text-amber-900 mb-2 flex items-center gap-1.5">
+                            <span class="bg-amber-800 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs">2</span>
+                            選擇學期：
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="selectTerm(1)" id="term-btn-1" class="py-2.5 px-3 rounded-xl font-black text-sm md:text-base border-2 transition-all">🍂 上學期</button>
+                            <button onclick="selectTerm(2)" id="term-btn-2" class="py-2.5 px-3 rounded-xl font-black text-sm md:text-base border-2 transition-all">🌱 下學期</button>
+                        </div>
+                    </div>
+
+                    <!-- 步驟 3：選擇考試範圍 (國小期中/期末，國中一/二/三次段考) -->
+                    <div>
+                        <label class="block text-sm md:text-base font-black text-amber-900 mb-2 flex items-center gap-1.5">
+                            <span class="bg-amber-800 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs">3</span>
+                            選擇評量/段考範圍：
+                        </label>
+                        <div id="exam-buttons-container" class="grid grid-cols-3 gap-2">
+                            <!-- 由 JS 根據國小/國中動態渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步驟 4：選擇地鼠浮現速度與時間 -->
+                <div class="mb-5 bg-amber-200/60 border-2 border-amber-700/40 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold text-amber-800">📚 本範圍考查單元重點：</div>
+                        <div id="scope-topic-desc" class="text-sm md:text-base font-black text-emerald-900 mt-0.5">
+                            10以內的數、比長短、10以內的加減
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        <span class="text-xs font-bold text-amber-900">地鼠速度：</span>
+                        <select id="speed-select" class="bg-white border-2 border-amber-700 rounded-xl px-2.5 py-1 text-xs md:text-sm font-bold text-amber-950 focus:outline-none">
+                            <option value="slow">🐢 輕鬆思考 (4.5秒)</option>
+                            <option value="normal" selected>🐹 標準速度 (3.5秒)</option>
+                            <option value="fast">⚡ 刺激快打 (2.5秒)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 開始按鈕 -->
+                <div class="text-center">
+                    <button onclick="startGame()" class="w-full sm:w-auto px-10 py-3.5 rounded-full bg-gradient-to-b from-emerald-500 to-green-700 hover:from-emerald-400 hover:to-green-600 text-white font-black text-xl md:text-2xl border-4 border-green-950 shadow-[0_6px_0_#052e16] active:translate-y-1 active:shadow-none transition-all cursor-pointer">
+                        🔨 開始打地鼠解題！
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 畫面二：遊戲主舞台 ================= -->
+        <section id="game-screen" class="hidden w-full flex-col items-center">
+            
+            <!-- 頂部資訊與數學題目大看板 -->
+            <div id="question-board" class="w-full max-w-3xl wood-board rounded-3xl p-3 md:p-4 mb-4 md:mb-6 relative">
+                <!-- 狀態列：分數、連擊、時間 -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 px-2 text-white">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-amber-950/80 border-2 border-amber-500 rounded-2xl px-3.5 py-1 flex items-center gap-1.5 shadow">
+                            <span class="text-lg">🏆</span>
+                            <span class="text-xs text-amber-200 font-bold">得分</span>
+                            <span id="score-display" class="text-xl md:text-2xl font-black text-yellow-300 math-font">0</span>
+                        </div>
+                        <div id="combo-badge" class="hidden bg-orange-600 border-2 border-yellow-300 rounded-2xl px-3 py-1 items-center gap-1 shadow animate-bounce">
+                            <span class="text-sm font-black text-white">🔥 <span id="combo-display">0</span> 連擊!</span>
+                        </div>
+                    </div>
+
+                    <!-- 換題按鈕 (避免學生卡死) -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="skipQuestion()" class="px-3 py-1 rounded-xl bg-amber-800 hover:bg-amber-700 border border-amber-400 text-amber-100 text-xs font-bold transition shadow">
+                            🔄 換一題
+                        </button>
+                        <div class="bg-amber-950/80 border-2 border-amber-500 rounded-2xl px-3.5 py-1 flex items-center gap-1.5 shadow">
+                            <span class="text-lg">⏱️</span>
+                            <span class="text-xs text-amber-200 font-bold">時間</span>
+                            <span id="timer-display" class="text-xl md:text-2xl font-black text-emerald-300 math-font">90</span>
+                            <span class="text-xs text-amber-200">秒</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 題目黑板/羊皮紙顯示區 -->
+                <div class="wood-inner rounded-2xl px-4 py-4 md:py-5 text-center relative overflow-hidden">
+                    <div class="flex items-center justify-between text-xs font-bold text-amber-800/80 mb-1 px-1">
+                        <span id="question-unit-tag" class="bg-amber-300/70 px-2.5 py-0.5 rounded-full border border-amber-600/40">單元名稱</span>
+                        <span id="question-counter-tag">第 1 題</span>
+                    </div>
+                    <div id="question-text" class="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-wide leading-snug math-font py-1">
+                        題目載入中...
+                    </div>
+                    <!-- 即時答題回饋橫幅 -->
+                    <div id="feedback-banner" class="h-6 text-sm md:text-base font-extrabold text-emerald-700 transition-opacity opacity-0">
+                        ✨ 太棒了！答對 +10 分！
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6 個地洞草地舞台 (3x2 響應式網格) -->
+            <div id="holes-stage" class="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-8 md:gap-x-8 md:gap-y-10 pt-6 pb-4 px-2 sm:px-6">
+                <!-- 由 JS 動態生成 6 個立體地洞與舉牌地鼠 -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ================= 畫面三：結算與錯題回顧 Modal ================= -->
+    <div id="result-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="w-full max-w-2xl wood-board rounded-3xl p-4 md:p-6 animate-pop max-h-[90vh] flex flex-col">
+            <div class="wood-inner rounded-2xl p-5 md:p-6 text-amber-950 overflow-y-auto flex-grow">
+                <div class="text-center border-b-2 border-amber-700/30 pb-4 mb-4">
+                    <div class="text-5xl md:text-6xl mb-2">🎉🐹🏆</div>
+                    <h2 class="text-2xl md:text-3xl font-black text-amber-950">時間到！挑戰結算</h2>
+                    <p id="result-scope-title" class="text-sm font-bold text-amber-800 mt-1"></p>
+                </div>
+
+                <!-- 成績統計三格 -->
+                <div class="grid grid-cols-3 gap-3 mb-5 text-center">
+                    <div class="bg-amber-100 border-2 border-amber-600 rounded-2xl p-3 shadow-sm">
+                        <div class="text-xs font-bold text-amber-800">最終總分</div>
+                        <div id="final-score" class="text-2xl md:text-4xl font-black text-amber-600 math-font mt-1">0</div>
+                    </div>
+                    <div class="bg-emerald-100 border-2 border-emerald-600 rounded-2xl p-3 shadow-sm">
+                        <div class="text-xs font-bold text-emerald-800">命中正確</div>
+                        <div id="final-correct" class="text-2xl md:text-4xl font-black text-emerald-600 math-font mt-1">0</div>
+                    </div>
+                    <div class="bg-rose-100 border-2 border-rose-600 rounded-2xl p-3 shadow-sm">
+                        <div class="text-xs font-bold text-rose-800">誤擊扣分</div>
+                        <div id="final-wrong" class="text-2xl md:text-4xl font-black text-rose-600 math-font mt-1">0</div>
+                    </div>
+                </div>
+
+                <!-- 登記成績至排行榜 -->
+                <div id="submit-score-section" class="mb-5 bg-amber-100/60 p-3 rounded-xl border border-amber-300">
+                    <label class="block text-sm md:text-base font-bold text-amber-900 mb-2">🏆 登記成績至排行榜：</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="player-name" placeholder="請輸入您的姓名或暱稱" class="flex-grow px-3 py-2 rounded-lg border-2 border-amber-400 focus:outline-none focus:border-amber-600 text-amber-950 font-bold transition-all">
+                        <button id="submit-score-btn" onclick="window.submitScoreAction()" class="px-4 py-2 bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white rounded-lg font-bold transition shadow cursor-pointer whitespace-nowrap">
+                            送出成績
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 答題紀錄與解析列表 -->
+                <div class="mb-5">
+                    <h3 class="text-sm md:text-base font-black text-amber-950 mb-2 flex items-center gap-1.5">
+                        <span>📝 本局解題回顧：</span>
+                    </h3>
+                    <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <!-- 動態列出答對與答錯的題目與正解 -->
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                    <button onclick="startGame()" class="px-8 py-3 rounded-full bg-gradient-to-b from-emerald-500 to-green-700 hover:from-emerald-400 hover:to-green-600 text-white font-black text-lg border-4 border-green-950 shadow-[0_4px_0_#052e16] active:translate-y-1 transition cursor-pointer">
+                        🔄 再玩一次同範圍
+                    </button>
+                    <button onclick="returnToMenu()" class="px-8 py-3 rounded-full bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white font-black text-lg border-4 border-amber-950 shadow-[0_4px_0_#451a03] active:translate-y-1 transition cursor-pointer">
+                        📚 切換其他年級範圍
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 排行榜 Modal ================= -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
+        <div class="w-full max-w-md wood-board rounded-3xl p-4 animate-pop max-h-[85vh] flex flex-col">
+            <div class="wood-inner rounded-2xl p-5 text-amber-950 flex flex-col h-full overflow-hidden">
+                <div class="text-center border-b-2 border-amber-700/30 pb-3 mb-3">
+                    <h2 class="text-2xl font-black text-amber-950">🏆 英雄排行榜</h2>
+                </div>
+                
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-sm font-bold text-amber-900">觀看年級：</span>
+                    <select id="leaderboard-grade-select" onchange="if(window.renderLeaderboardUI) window.renderLeaderboardUI(parseInt(this.value))" class="flex-grow bg-white border-2 border-amber-400 rounded-lg px-2 py-1 text-sm font-bold text-amber-950 focus:outline-none">
+                        <option value="1">小一</option><option value="2">小二</option><option value="3">小三</option>
+                        <option value="4">小四</option><option value="5">小五</option><option value="6">小六</option>
+                        <option value="7">國一 (七年級)</option><option value="8">國二 (八年級)</option><option value="9">國三 (九年級)</option>
+                    </select>
+                </div>
+
+                <div id="leaderboard-list" class="flex-grow overflow-y-auto pr-1 space-y-1.5 min-h-[250px]">
+                    <!-- 名次列表動態產生 -->
+                </div>
+
+                <div class="mt-4 text-center pt-3 border-t-2 border-amber-700/30">
+                    <button onclick="window.closeLeaderboard()" class="px-8 py-2 rounded-full bg-slate-700 hover:bg-slate-600 text-white font-black text-lg shadow-md transition cursor-pointer">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁尾署名 -->
+    <footer class="relative z-20 bg-amber-950/90 border-t-4 border-amber-900 text-amber-200/90 text-center py-2.5 text-xs md:text-sm font-bold tracking-wider">
+        網頁設計：李政憲老師
+    </footer>
+
+    <!-- Google Apps Script (GAS) 整合 (試算表排行榜) -->
+    <script>
+        // ======= 👇 請將下方的引號內容，替換成您的 GAS 網頁應用程式 URL 👇 =======
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyfgpPB0_ABIlv2IAvoMGtss4-BVZ390ywr5DTpTNj5jP_BLu8lh5820csHjlaRCNLdLQ/exec';
+        // =========================================================================
+
+        let allScores = [];
+
+        // 全域函式：上傳成績
+        window.submitScoreToCloud = async function(name) {
+            const btn = document.getElementById('submit-score-btn');
+            btn.disabled = true;
+            btn.innerText = '送出中...';
+
+            if(GAS_URL.includes('請替換')) {
+                alert('⚠️ 尚未設定 Google Apps Script 網址！請老師先在 HTML 原始碼中填入您的 GAS URL。');
+                btn.innerText = '無法連線伺服器';
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const payload = {
+                    action: 'addScore',
+                    name: name.trim(),
+                    grade: window.selectedGrade,
+                    score: window.score
+                };
+                
+                // 傳送資料到 GAS (使用 POST，避免 CORS preflight)
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.status === 'success') {
+                    btn.innerText = '已成功送出！';
+                    btn.classList.replace('bg-amber-600', 'bg-emerald-600');
+                    setTimeout(() => {
+                        window.openLeaderboard();
+                    }, 800);
+                } else {
+                    throw new Error('伺服器回傳錯誤');
+                }
+            } catch (e) {
+                console.error("Save error", e);
+                btn.innerText = '送出失敗，請重試';
+                btn.disabled = false;
+            }
+        }
+
+        // 全域函式：讀取排行榜
+        window.fetchAndShowLeaderboard = async function(gradeFilter) {
+            const listEl = document.getElementById('leaderboard-list');
+            listEl.innerHTML = '<div class="text-center py-8 font-bold text-amber-700 animate-pulse">📡 讀取雲端資料中...</div>';
+            
+            if(GAS_URL.includes('請替換')) {
+                listEl.innerHTML = '<div class="text-center py-8 text-rose-600 font-bold">⚠️ 尚未設定連線，請先在程式碼中填入 GAS URL。</div>';
+                return;
+            }
+
+            try {
+                // 從 GAS 讀取資料
+                const response = await fetch(GAS_URL + '?action=getLeaderboard');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    allScores = result.data;
+                    window.renderLeaderboardUI(gradeFilter);
+                } else {
+                    throw new Error('伺服器回傳錯誤');
+                }
+            } catch(e) {
+                console.error(e);
+                listEl.innerHTML = '<div class="text-center py-8 text-rose-600 font-bold">讀取失敗，請檢查網址或稍後再試。</div>';
+            }
+        }
+
+        // 全域函式：渲染排行榜畫面
+        window.renderLeaderboardUI = function(grade) {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            // 在記憶體中篩選年級並由高到低排序
+            const filtered = allScores.filter(s => parseInt(s.grade) === grade).sort((a, b) => b.score - a.score);
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="text-center py-8 text-amber-700 font-bold">目前該年級還沒有人挑戰，搶先成為第一名吧！</div>';
+                return;
+            }
+
+            filtered.slice(0, 50).forEach((s, idx) => {
+                const el = document.createElement('div');
+                let bgClass = "bg-amber-50 border-amber-200";
+                let rankStr = `<span class="font-black text-amber-800 w-6 text-center">${idx + 1}</span>`;
+                
+                if (idx === 0) { bgClass = "bg-yellow-100 border-yellow-400 shadow-sm"; rankStr = '<span class="text-xl">🥇</span>'; }
+                else if (idx === 1) { bgClass = "bg-slate-100 border-slate-300"; rankStr = '<span class="text-lg">🥈</span>'; }
+                else if (idx === 2) { bgClass = "bg-orange-100 border-orange-300"; rankStr = '<span class="text-lg">🥉</span>'; }
+
+                el.className = `flex justify-between items-center p-2.5 rounded-xl border ${bgClass}`;
+                el.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 text-center flex justify-center items-center">${rankStr}</div>
+                        <div class="font-black text-slate-800 text-sm md:text-base">${s.name}</div>
+                    </div>
+                    <div class="font-black text-amber-600 math-font text-lg">${s.score} <span class="text-xs text-amber-700/70">分</span></div>
+                `;
+                list.appendChild(el);
+            });
+        }
+    </script>
+
+    <script>
+        // =========================================================================
+        // 1. 遊戲全域狀態與設定
+        // =========================================================================
+        let selectedGrade = 1; // 1~6 (小一~小六), 7~9 (國一~國三)
+        let selectedTerm = 1;  // 1 (上學期), 2 (下學期)
+        let selectedExam = 1;  // 國小: 1(期中), 2(期末), 3(全學期綜合) | 國中: 1(第一次段考), 2(第二次段考), 3(第三次段考)
+
+        let score = 0;
+        let combo = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let questionIndex = 0;
+        let timeLeft = 90;
+        let isPlaying = false;
+        let isMuted = false;
+
+        let gameTimerInterval = null;
+        let moleWaveTimeout = null;
+        let currentQuestion = null; // { q: '題目字串', a: '正解字串', distractors: ['錯1','錯2','錯3'], unit: '單元' }
+        let answeredLog = [];       // 記錄作答歷程供結算檢視
+
+        const TOTAL_HOLES = 6;
+        // 紀錄每個洞口狀態：{ isUp: false, answer: '', isCorrect: false, hitLocked: false }
+        let holeStates = Array.from({ length: TOTAL_HOLES }, () => ({
+            isUp: false,
+            answer: '',
+            isCorrect: false,
+            hitLocked: false
+        }));
+
+        // =========================================================================
+        // 2. 音效合成器 (Web Audio API，免外部音檔)
+        // =========================================================================
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) audioCtx = new AudioContextClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('btn-sound');
+            btn.innerText = isMuted ? '🔇 音效: 關' : '🔊 音效: 開';
+        }
+
+        // 全螢幕切換功能與跨平台相容性處理
+        function toggleFullscreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+
+            // 涵蓋主流瀏覽器與舊版的相容性前綴
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+            const isFullscreen = doc.fullscreenElement || doc.mozFullScreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
+            if (!isFullscreen) {
+                if (requestFullScreen) {
+                    try {
+                        const promise = requestFullScreen.call(docEl);
+                        if (promise) {
+                            promise.catch(err => {
+                                showGlobalToast('⚠️ 無法全螢幕：受限於 Google 協作平台的嵌入限制，或您的裝置不支援。');
+                            });
+                        }
+                    } catch(err) {
+                        showGlobalToast('⚠️ 無法全螢幕：受限於平台限制。');
+                    }
+                } else {
+                    showGlobalToast('⚠️ 您的裝置 (如 iPhone) 不支援網頁原生全螢幕。');
+                }
+            } else {
+                if (cancelFullScreen) {
+                    cancelFullScreen.call(doc);
+                }
+            }
+        }
+
+        // 顯示全域浮動提示框 (Toast) 處理被阻擋的情況
+        function showGlobalToast(msg) {
+            let toast = document.getElementById('global-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'global-toast';
+                toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] bg-rose-700 text-white px-5 py-2.5 rounded-2xl shadow-2xl font-bold text-sm md:text-base transition-opacity duration-300 pointer-events-none';
+                document.body.appendChild(toast);
+            }
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+        }
+
+        // 監聽全螢幕狀態改變（包含各瀏覽器相容前綴）
+        const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+        fsEvents.forEach(evt => {
+            document.addEventListener(evt, () => {
+                const btn = document.getElementById('btn-fullscreen');
+                const isFullscreen = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+                if (btn) {
+                    btn.innerHTML = isFullscreen ? '🗗 退出全螢幕' : '⛶ 全螢幕';
+                }
+            });
+        });
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'whack') {
+                // 清脆木槌敲擊聲
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(260, now);
+                osc.frequency.exponentialRampToValueAtTime(75, now + 0.12);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else if (type === 'correct') {
+                // 歡快叮咚得分聲
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);       // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                osc.frequency.setValueAtTime(1046.5, now + 0.24); // C6
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } else if (type === 'wrong') {
+                // 低沉扣分嗡嗡聲
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(115, now + 0.3);
+                gain.gain.setValueAtTime(0.28, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'pop') {
+                // 地鼠冒出輕巧聲
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(480, now + 0.09);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            }
+        }
+
+        // =========================================================================
+        // 3. 108 課綱小一～國三各學期與段考單元範圍對照表
+        // =========================================================================
+        const GRADE_NAMES = {
+            1: '國小一年級', 2: '國小二年級', 3: '國小三年級',
+            4: '國小四年級', 5: '國小五年級', 6: '國小六年級',
+            7: '國中一年級 (七年級)', 8: '國中二年級 (八年級)', 9: '國中三年級 (九年級)'
+        };
+
+        // 定義每個 key = `${grade}_${term}_${exam}` 的單元名稱描述
+        const SCOPE_TOPICS = {
+            // 小一
+            '1_1_1': '10以內的數、比長短、順序與第幾、分與合',
+            '1_1_2': '10以內的加減、認識形狀、20以內的數與認識鐘面整點',
+            '1_2_1': '20以內的進位加法與退位減法、50以內的數',
+            '1_2_2': '100以內的數、錢幣換算(1元/5元/10元/50元)、二位數不進退位加減',
+            // 小二
+            '2_1_1': '200以內的數、二位數直式進退位加減、認識公分與量長度',
+            '2_1_2': '容量與重量比較、2, 4, 5, 8 的乘法、幾時幾分',
+            '2_2_1': '1000以內的數、公尺與公分換算、九九乘法全範圍',
+            '2_2_2': '乘與加減兩步驟問題、分裝與平分(除法初探)、平面圖形邊角頂點與正方體',
+            // 小三
+            '3_1_1': '10000以內的數、四位數加減、毫米與長度換算、一位數乘以二三位数',
+            '3_1_2': '認識角與直角、除法(含餘數)、同分母分數初探、圓心與半徑直徑',
+            '3_2_1': '除法直式計算、公升與毫升、時間(日/時/分/秒)、兩步驟四則問題',
+            '3_2_2': '一位小數與加減、同分母分數加減、公斤與公克、平方公分面積',
+            // 小四
+            '4_1_1': '一億以內的數、多位數乘法與除法、量角器與角度計算(銳角/鈍角/平角/周角)',
+            '4_1_2': '假分數與帶分數互換、三角形分類、整數四則混合運算(含括號)、二位小數',
+            '4_2_1': '多位數乘除、四邊形性質(平行四邊形/梯形/菱形)、分數加減與整數倍',
+            '4_2_2': '小數乘以整數、周長與長方形正方形面積公式、立方公分體積、時間跨日計算',
+            // 小五
+            '5_1_1': '多位小數、因數與倍數、公因數(GCD)與公倍數(LCM)、擴分約分與通分',
+            '5_1_2': '異分母分數加減、平行四邊形/三角形/梯形面積、整數四則分配律、三角形內角和',
+            '5_2_1': '分數乘法、小數乘法、扇形與圓心角(幾分之幾圓)、正方體與長方體體積',
+            '5_2_2': '整數小數除以整數、表面積、比率與百分率(打折/加成)、公噸與公畝公頃',
+            // 小六
+            '6_1_1': '質因數分解、最大公因數與最小公倍數、分數除法、小數除法',
+            '6_1_2': '比與比值、相等的比、圓周率(3.14)與圓周長、圓面積與扇形面積',
+            '6_2_1': '分數與小數四則混合運算、速率(距離÷時間、時速分速換算)、柱體體積與表面積',
+            '6_2_2': '基準量與比較量(母子和/母子差)、縮圖與比例尺、等量公理求未知數 x、雞兔同籠',
+            // 國一 (七年級)
+            '7_1_1': '正負數與絕對值、整數的加減乘除四則運算、指數律與科學記號',
+            '7_1_2': '質因數分解與短除法、正負分數四則運算',
+            '7_1_3': '一元一次式化簡、一元一次方程式解法與應用問題',
+            '7_2_1': '二元一次聯立方程式(代入消去/加減消去法)與應用問題',
+            '7_2_2': '直角坐標平面(象限判定、坐標平移)、二元一次方程式圖形、比例式與連比(正反比)',
+            '7_2_3': '一元一次不等式解法、統計圖表與平均數/中位數/眾數、三視圖',
+            // 國二 (八年級)
+            '8_1_1': '乘法公式((a±b)²、平方差)、多項式四則運算、平方根與近似值',
+            '8_1_2': '根式的四則運算(最簡根式)、畢氏定理(勾股定理)與坐標平面兩點距離',
+            '8_1_3': '因式分解(提公因式、十字交乘法)、一元二次方程式(因式分解法、配方法、公式解)',
+            '8_2_1': '等差數列(第 n 項公式)、等差級數求和、等比數列與函數基本概念',
+            '8_2_2': '內角與外角和定理、尺規作圖、三角形全等性質(SSS, SAS, ASA, AAS, RHS)、中垂線與角平分線',
+            '8_2_3': '三角形邊角不等關係(大邊對大角、兩邊和大於第三邊)、平行線截角性質、平行四邊形與梯形中線',
+            // 國三 (九年級)
+            '9_1_1': '連比例、平行線截比例線段性質、三角形相似性質(AA, SAS, SSS)與面積比',
+            '9_1_2': '點線圓位置關係、切線性質、弦心距、圓心角與圓周角、圓內接四邊形、弦切角',
+            '9_1_3': '幾何推理證明、三角形三心(外心、內心、重心性質與面積角度關係)',
+            '9_2_1': '二次函數圖形、頂點坐標、對稱軸、平移與最大值最小值',
+            '9_2_2': '四分位數、全距與四分位距(IQR)、盒狀圖、古典機率(硬幣、骰子、抽球)',
+            '9_2_3': '角柱/角錐/圓柱/圓錐展開圖、表面積與體積計算、國中會考總複習精華'
+        };
+
+        // =========================================================================
+        // 4. 選單互動邏輯
+        // =========================================================================
+        function selectGrade(g) {
+            selectedGrade = g;
+            window.selectedGrade = g; // 同步至全域供排行榜使用
+            // 若從國中切回國小或反之，預設選第1次評量
+            updateMenuUI();
+        }
+
+        function selectTerm(t) {
+            selectedTerm = t;
+            updateMenuUI();
+        }
+
+        function selectExam(e) {
+            selectedExam = e;
+            updateMenuUI();
+        }
+
+        function updateMenuUI() {
+            // 1. 更新年級按鈕樣式
+            for (let i = 1; i <= 9; i++) {
+                const btn = document.getElementById(`grade-btn-${i}`);
+                if (!btn) continue;
+                if (i === selectedGrade) {
+                    btn.className = "grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 bg-amber-800 text-yellow-300 border-amber-950 shadow-md scale-[1.03] transition-all";
+                } else {
+                    btn.className = "grade-btn py-2.5 px-2 rounded-xl font-black text-sm md:text-base border-2 bg-white/80 hover:bg-amber-100 text-amber-950 border-amber-700/50 transition-all";
+                }
+            }
+
+            // 2. 更新學期按鈕樣式
+            for (let t = 1; t <= 2; t++) {
+                const btn = document.getElementById(`term-btn-${t}`);
+                if (t === selectedTerm) {
+                    btn.className = "py-2.5 px-3 rounded-xl font-black text-sm md:text-base border-2 bg-amber-800 text-yellow-300 border-amber-950 shadow-md transition-all";
+                } else {
+                    btn.className = "py-2.5 px-3 rounded-xl font-black text-sm md:text-base border-2 bg-white/80 hover:bg-amber-100 text-amber-950 border-amber-700/50 transition-all";
+                }
+            }
+
+            // 3. 動態產生國小 (期中/期末/全學期) 或 國中 (第1/2/3次段考) 按鈕
+            const examContainer = document.getElementById('exam-buttons-container');
+            examContainer.innerHTML = '';
+
+            const isJunior = selectedGrade >= 7;
+            const examOptions = isJunior
+                ? [
+                    { id: 1, label: '第 1 次段考' },
+                    { id: 2, label: '第 2 次段考' },
+                    { id: 3, label: '第 3 次段考' }
+                ]
+                : [
+                    { id: 1, label: '期中考範圍' },
+                    { id: 2, label: '期末考範圍' },
+                    { id: 3, label: '全學期綜合' }
+                ];
+
+            examOptions.forEach(opt => {
+                const b = document.createElement('button');
+                b.onclick = () => selectExam(opt.id);
+                b.innerText = opt.label;
+                if (opt.id === selectedExam) {
+                    b.className = "py-2.5 px-2 rounded-xl font-black text-xs md:text-sm border-2 bg-emerald-700 text-yellow-200 border-emerald-950 shadow-md transition-all";
+                } else {
+                    b.className = "py-2.5 px-2 rounded-xl font-black text-xs md:text-sm border-2 bg-white/80 hover:bg-emerald-50 text-amber-950 border-amber-700/50 transition-all";
+                }
+                examContainer.appendChild(b);
+            });
+
+            // 4. 更新單元重點文字
+            const topicDescEl = document.getElementById('scope-topic-desc');
+            if (!isJunior && selectedExam === 3) {
+                const t1 = SCOPE_TOPICS[`${selectedGrade}_${selectedTerm}_1`] || '';
+                const t2 = SCOPE_TOPICS[`${selectedGrade}_${selectedTerm}_2`] || '';
+                topicDescEl.innerText = `【綜合】${t1}、${t2}`;
+            } else {
+                const key = `${selectedGrade}_${selectedTerm}_${selectedExam}`;
+                topicDescEl.innerText = SCOPE_TOPICS[key] || '綜合數學能力測驗';
+            }
+
+            // 5. 更新頂部 Badge
+            const termName = selectedTerm === 1 ? '上學期' : '下學期';
+            const examName = examOptions.find(x => x.id === selectedExam)?.label || '';
+            document.getElementById('current-scope-badge').innerText = `${GRADE_NAMES[selectedGrade]} ｜ ${termName} ｜ ${examName}`;
+        }
+
+        // =========================================================================
+        // 5. 動態數學題庫與誘答生成引擎 (符合標準數學符號規範)
+        // =========================================================================
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function choice(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function gcd(a, b) {
+            a = Math.abs(a); b = Math.abs(b);
+            while (b) { let t = b; b = a % b; a = t; }
+            return a || 1;
+        }
+
+        // 針對數值答案自動生成 3 個合理且不重複的誘答選項
+        function makeNumericDistractors(correctVal, step = 1, allowNegative = false) {
+            const set = new Set();
+            const candidates = [
+                correctVal + step,
+                correctVal - step,
+                correctVal + step * 2,
+                correctVal - step * 2,
+                correctVal + 10,
+                correctVal - 10,
+                correctVal + 3,
+                correctVal - 3
+            ];
+            for (let c of candidates) {
+                if (!allowNegative && c < 0) continue;
+                if (c !== correctVal) set.add(String(c));
+                if (set.size >= 5) break;
+            }
+            while (set.size < 3) {
+                let offset = randInt(1, 9) * (Math.random() < 0.5 ? 1 : -1);
+                let val = correctVal + offset;
+                if (!allowNegative && val < 0) val = correctVal + Math.abs(offset);
+                if (val !== correctVal) set.add(String(val));
+            }
+            return Array.from(set).sort(() => Math.random() - 0.5).slice(0, 3);
+        }
+
+        // 主出題函式：依據 (grade, term, exam) 產生題目
+        function generateMathQuestion(grade, term, exam) {
+            // 若國小選「3: 全學期綜合」，隨機從期中(1)或期末(2)抽題
+            let targetExam = exam;
+            if (grade <= 6 && exam === 3) {
+                targetExam = Math.random() < 0.5 ? 1 : 2;
+            }
+
+            const key = `${grade}_${term}_${targetExam}`;
+            const unitText = SCOPE_TOPICS[key] ? SCOPE_TOPICS[key].split('、')[0] : '核心觀念';
+
+            let qObj = null;
+
+            switch (key) {
+                // ==================== 小一 ====================
+                case '1_1_1': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const a = randInt(2, 5), b = randInt(1, 5);
+                        const ans = a + b;
+                        qObj = { q: `${a} 和 ${b} 合起來是多少？`, a: String(ans), distractors: makeNumericDistractors(ans, 1), unit: '分與合' };
+                    } else {
+                        const total = randInt(6, 10), part = randInt(1, total - 1);
+                        const ans = total - part;
+                        qObj = { q: `${total} 可以分成 ${part} 和多少？`, a: String(ans), distractors: makeNumericDistractors(ans, 1), unit: '分與合' };
+                    }
+                    break;
+                }
+                case '1_1_2': {
+                    const isAdd = Math.random() < 0.5;
+                    if (isAdd) {
+                        const a = randInt(2, 6), b = randInt(1, 10 - a);
+                        qObj = { q: `${a} + ${b} = ?`, a: String(a + b), distractors: makeNumericDistractors(a + b, 1), unit: '10以內的加法' };
+                    } else {
+                        const a = randInt(5, 10), b = randInt(1, a - 1);
+                        qObj = { q: `${a} − ${b} = ?`, a: String(a - b), distractors: makeNumericDistractors(a - b, 1), unit: '10以內的減法' };
+                    }
+                    break;
+                }
+                case '1_2_1': {
+                    const isAdd = Math.random() < 0.5;
+                    if (isAdd) {
+                        const a = randInt(6, 9), b = randInt(5, 9);
+                        qObj = { q: `${a} + ${b} = ?`, a: String(a + b), distractors: makeNumericDistractors(a + b, 1), unit: '進位加法' };
+                    } else {
+                        const a = randInt(12, 18), b = randInt(4, 9);
+                        qObj = { q: `${a} − ${b} = ?`, a: String(a - b), distractors: makeNumericDistractors(a - b, 1), unit: '退位減法' };
+                    }
+                    break;
+                }
+                case '1_2_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const tens = randInt(2, 6) * 10 + randInt(1, 4);
+                        const add = randInt(1, 2) * 10 + randInt(1, 4);
+                        qObj = { q: `${tens} + ${add} = ?`, a: String(tens + add), distractors: makeNumericDistractors(tens + add, 2), unit: '二位數加法' };
+                    } else {
+                        const c10 = randInt(2, 5), c1 = randInt(1, 8);
+                        const ans = c10 * 10 + c1;
+                        qObj = { q: `${c10} 個 10 元和 ${c1} 個 1 元，合起來是幾元？`, a: `${ans}元`, distractors: [`${ans+10}元`, `${c1*10+c10}元`, `${ans-1}元`], unit: '認識錢幣' };
+                    }
+                    break;
+                }
+
+                // ==================== 小二 ====================
+                case '2_1_1': {
+                    const isAdd = Math.random() < 0.5;
+                    if (isAdd) {
+                        const a = randInt(25, 68), b = randInt(15, 29);
+                        qObj = { q: `${a} + ${b} = ?`, a: String(a + b), distractors: makeNumericDistractors(a + b, 2), unit: '二位數進位加法' };
+                    } else {
+                        const a = randInt(52, 95), b = randInt(16, 38);
+                        qObj = { q: `${a} − ${b} = ?`, a: String(a - b), distractors: makeNumericDistractors(a - b, 2), unit: '二位數退位減法' };
+                    }
+                    break;
+                }
+                case '2_1_2': {
+                    const m = choice([2, 4, 5, 8]), n = randInt(2, 9);
+                    const ans = m * n;
+                    qObj = { q: `${m} × ${n} = ?`, a: String(ans), distractors: makeNumericDistractors(ans, m), unit: '九九乘法' };
+                    break;
+                }
+                case '2_2_1': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const m = randInt(3, 9), n = randInt(3, 9);
+                        qObj = { q: `${m} × ${n} = ?`, a: String(m * n), distractors: makeNumericDistractors(m * n, 3), unit: '九九乘法' };
+                    } else {
+                        const m = randInt(2, 7), cm = randInt(10, 85);
+                        const ans = m * 100 + cm;
+                        qObj = { q: `${m} 公尺 ${cm} 公分 ＝ 幾公分？`, a: `${ans}公分`, distractors: [`${m*10+cm}公分`, `${ans+10}公分`, `${cm*10+m}公分`], unit: '長度換算' };
+                    }
+                    break;
+                }
+                case '2_2_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const a = randInt(3, 8), b = randInt(2, 6), c = randInt(4, 15);
+                        const ans = a * b + c;
+                        qObj = { q: `${a} × ${b} + ${c} = ?`, a: String(ans), distractors: makeNumericDistractors(ans, 2), unit: '兩步驟問題' };
+                    } else {
+                        qObj = choice([
+                            { q: '正方體總共有幾個面？', a: '6個', distractors: ['4個', '8個', '12個'], unit: '立體圖形' },
+                            { q: '正方體總共有幾個頂點？', a: '8個', distractors: ['6個', '10個', '12個'], unit: '立體圖形' },
+                            { q: '正方體總共有幾條邊？', a: '12條', distractors: ['6條', '8條', '16條'], unit: '立體圖形' }
+                        ]);
+                    }
+                    break;
+                }
+
+                // ==================== 小三 ====================
+                case '3_1_1': {
+                    const a = randInt(12, 45), b = randInt(3, 8);
+                    const ans = a * b;
+                    qObj = { q: `${a} × ${b} = ?`, a: String(ans), distractors: makeNumericDistractors(ans, b), unit: '二位數乘法' };
+                    break;
+                }
+                case '3_1_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const d = randInt(3, 9), q = randInt(4, 9);
+                        const total = d * q;
+                        qObj = { q: `${total} ÷ ${d} = ?`, a: String(q), distractors: makeNumericDistractors(q, 1), unit: '除法' };
+                    } else {
+                        const r = randInt(3, 15);
+                        qObj = { q: `一個圓的半徑是 ${r} 公分，直徑是幾公分？`, a: `${r * 2}公分`, distractors: [`${r}公分`, `${r + 2}公分`, `${r * 3}公分`], unit: '圓的認識' };
+                    }
+                    break;
+                }
+                case '3_2_1': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const d = randInt(3, 8), q = randInt(12, 28);
+                        qObj = { q: `${d * q} ÷ ${d} = ?`, a: String(q), distractors: makeNumericDistractors(q, 2), unit: '除法' };
+                    } else {
+                        const hr = randInt(1, 4), min = randInt(10, 50);
+                        const ans = hr * 60 + min;
+                        qObj = { q: `${hr} 小時 ${min} 分鐘 ＝ 幾分鐘？`, a: `${ans}分`, distractors: [`${hr*100+min}分`, `${ans+20}分`, `${ans-10}分`], unit: '時間換算' };
+                    }
+                    break;
+                }
+                case '3_2_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const den = randInt(5, 11);
+                        const a = randInt(1, den - 3), b = randInt(1, den - a - 1);
+                        qObj = { q: `${a}/${den} + ${b}/${den} = ?`, a: `${a + b}/${den}`, distractors: [`${a + b}/${den * 2}`, `${a + b + 1}/${den}`, `${Math.abs(a - b)}/${den}`], unit: '同分母分數加減' };
+                    } else {
+                        const a = (randInt(12, 58) / 10).toFixed(1), b = (randInt(5, 35) / 10).toFixed(1);
+                        const ans = (parseFloat(a) + parseFloat(b)).toFixed(1);
+                        qObj = { q: `${a} + ${b} = ?`, a: String(ans), distractors: [(parseFloat(ans)+0.2).toFixed(1), (parseFloat(ans)-0.1).toFixed(1), (parseFloat(ans)+1).toFixed(1)], unit: '一位小數加減' };
+                    }
+                    break;
+                }
+
+                // ==================== 小四 ====================
+                case '4_1_1': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const a = randInt(11, 25) * 10, b = randInt(3, 8);
+                        qObj = { q: `${a} × ${b} = ?`, a: String(a * b), distractors: makeNumericDistractors(a * b, 50), unit: '多位數乘法' };
+                    } else {
+                        const a1 = randInt(25, 75);
+                        const ans = 180 - a1;
+                        qObj = { q: `平角是 180°，若 ∠1 = ${a1}°，則平角減去 ∠1 是幾度？`, a: `${ans}°`, distractors: [`${90 - a1 > 0 ? 90 - a1 : ans + 10}°`, `${ans + 10}°`, `${ans - 10}°`], unit: '角度計算' };
+                    }
+                    break;
+                }
+                case '4_1_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const a = randInt(15, 40), b = randInt(3, 8), c = randInt(2, 6);
+                        const ans = a + b * c;
+                        qObj = { q: `${a} + ${b} × ${c} = ?`, a: String(ans), distractors: [String((a + b) * c), String(ans + b), String(ans - c)], unit: '四則混合運算' };
+                    } else {
+                        const w = randInt(1, 4), den = randInt(3, 7), num = randInt(1, den - 1);
+                        const top = w * den + num;
+                        qObj = { q: `將帶分數 ${w} 又 ${num}/${den} 化成假分數是多少？`, a: `${top}/${den}`, distractors: [`${w + num}/${den}`, `${top + 1}/${den}`, `${w * num}/${den}`], unit: '假分數與帶分數' };
+                    }
+                    break;
+                }
+                case '4_2_1': {
+                    const a = randInt(4, 12), b = randInt(3, 9), c = randInt(2, 6);
+                    const ans = (a + b) * c;
+                    qObj = { q: `(${a} + ${b}) × ${c} = ?`, a: String(ans), distractors: [String(a + b * c), String(ans + c), String(ans - 10)], unit: '四則混合運算' };
+                    break;
+                }
+                case '4_2_2': {
+                    const isArea = Math.random() < 0.5;
+                    const w = randInt(5, 15), h = randInt(4, 12);
+                    if (isArea) {
+                        const ans = w * h;
+                        qObj = { q: `長方形的長為 ${w} 公分、寬為 ${h} 公分，面積是幾平方公分？`, a: String(ans), distractors: [String((w + h) * 2), String(ans + w), String(w + h)], unit: '面積計算' };
+                    } else {
+                        const ans = (w + h) * 2;
+                        qObj = { q: `長方形的長為 ${w} 公分、寬為 ${h} 公分，周長是幾公分？`, a: String(ans), distractors: [String(w * h), String(w + h), String(ans + 4)], unit: '周長計算' };
+                    }
+                    break;
+                }
+
+                // ==================== 小五 ====================
+                case '5_1_1': {
+                    const isGCD = Math.random() < 0.5;
+                    const pairs = [[12, 18], [16, 24], [15, 20], [18, 27], [14, 21], [8, 12], [20, 30]];
+                    const [a, b] = choice(pairs);
+                    const g = gcd(a, b);
+                    const l = (a * b) / g;
+                    if (isGCD) {
+                        qObj = { q: `${a} 和 ${b} 的最大公因數是多少？`, a: String(g), distractors: [String(l), String(g * 2), String(g + 1)], unit: '最大公因數' };
+                    } else {
+                        qObj = { q: `${a} 和 ${b} 的最小公倍數是多少？`, a: String(l), distractors: [String(g), String(a * b), String(l + a)], unit: '最小公倍數' };
+                    }
+                    break;
+                }
+                case '5_1_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const base = randInt(6, 16), height = randInt(2, 6) * 2;
+                        const ans = (base * height) / 2;
+                        qObj = { q: `底為 ${base} 公分、高為 ${height} 公分的三角形，面積是多少？`, a: String(ans), distractors: [String(base * height), String(ans + base), String(base + height)], unit: '三角形面積' };
+                    } else {
+                        const a1 = randInt(40, 75), a2 = randInt(40, 75);
+                        const ans = 180 - a1 - a2;
+                        qObj = { q: `三角形的兩個內角分別為 ${a1}° 和 ${a2}°，第三個角是幾度？`, a: `${ans}°`, distractors: [`${ans + 10}°`, `${ans - 10}°`, `${360 - a1 - a2}°`], unit: '三角形內角和' };
+                    }
+                    break;
+                }
+                case '5_2_1': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const s = randInt(3, 6);
+                        const ans = s * s * s;
+                        qObj = { q: `邊長為 ${s} 公分的正方體，體積是幾立方公分？`, a: String(ans), distractors: [String(s * s * 6), String(s * 3), String(s * s)], unit: '體積計算' };
+                    } else {
+                        const divs = choice([2, 3, 4, 6, 8, 9, 10, 12]);
+                        const ans = 360 / divs;
+                        qObj = { q: `1/${divs} 圓的扇形，它的圓心角是幾度？`, a: `${ans}°`, distractors: [`${180 / divs}°`, `${ans + 15}°`, `${ans * 2}°`], unit: '扇形圓心角' };
+                    }
+                    break;
+                }
+                case '5_2_2': {
+                    const price = choice([200, 300, 400, 500, 800, 1000]);
+                    const off = choice([7, 8, 9]);
+                    const ans = price * off / 10;
+                    qObj = { q: `定價 ${price} 元的衣服打 ${off} 折（${off * 10}%），售價是幾元？`, a: `${ans}元`, distractors: [`${price - ans}元`, `${ans + 50}元`, `${price - off * 10}元`], unit: '比率與百分率' };
+                    break;
+                }
+
+                // ==================== 小六 ====================
+                case '6_1_1': {
+                    const a = randInt(2, 6), b = randInt(2, 5);
+                    const ans = a * b;
+                    qObj = { q: `計算分數除法：${a} ÷ (1/${b}) = ?`, a: String(ans), distractors: [`${a}/${b}`, `1/${ans}`, String(a + b)], unit: '分數除法' };
+                    break;
+                }
+                case '6_1_2': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const a = randInt(2, 5);
+                        let b = randInt(3, 7);
+                        const k = randInt(2, 5);
+                        if (a === b) b++;
+                        const ans = b * k;
+                        qObj = { q: `若相等的比 ${a} : ${b} ＝ ${a * k} : □，則 □ = ?`, a: String(ans), distractors: [String(a * k), String(ans + a), String(b + k)], unit: '相等的比' };
+                    } else {
+                        const r = choice([5, 10, 20]);
+                        const ans = 2 * r * 3.14;
+                        qObj = { q: `半徑 ${r} 公分的圓，圓周長約是幾公分？(圓周率以 3.14 計算)`, a: String(ans), distractors: [String(r * r * 3.14), String(r * 3.14), String(ans * 2)], unit: '圓周長計算' };
+                    }
+                    break;
+                }
+                case '6_2_1': {
+                    const speed = choice([50, 60, 70, 80, 90]);
+                    const time = randInt(2, 5);
+                    const dist = speed * time;
+                    qObj = { q: `汽車時速 ${speed} 公里，行駛 ${time} 小時共走了幾公里？`, a: `${dist}公里`, distractors: [`${speed + time}公里`, `${dist + speed}公里`, `${Math.round(speed / time)}公里`], unit: '速率問題' };
+                    break;
+                }
+                case '6_2_2': {
+                    const x = randInt(3, 12), a = randInt(2, 6), b = randInt(4, 20);
+                    const total = a * x + b;
+                    qObj = { q: `利用等量公理解未知數：${a} × x + ${b} = ${total}，x = ?`, a: String(x), distractors: makeNumericDistractors(x, 1), unit: '等量公理' };
+                    break;
+                }
+
+                // ==================== 國一 (七年級) ====================
+                case '7_1_1': {
+                    const type = randInt(1, 3);
+                    if (type === 1) {
+                        const a = randInt(4, 15), b = randInt(5, 18);
+                        const ans = -a + b;
+                        qObj = { q: `計算：(−${a}) + ${b} = ?`, a: String(ans), distractors: [String(a + b), String(-(a + b)), String(-ans)], unit: '正負數運算' };
+                    } else if (type === 2) {
+                        const a = randInt(3, 12), b = randInt(4, 12);
+                        const ans = -a - (-b);
+                        qObj = { q: `計算：(−${a}) − (−${b}) = ?`, a: String(ans), distractors: [String(-a - b), String(a + b), String(-ans)], unit: '正負數運算' };
+                    } else {
+                        qObj = choice([
+                            { q: '計算指數：(−3)² − (−2)³ = ?', a: '17', distractors: ['1', '−1', '−17'], unit: '指數律' },
+                            { q: '計算絕對值與指數：|−12| − 2³ = ?', a: '4', distractors: ['−20', '6', '−18'], unit: '絕對值與指數' },
+                            { q: '將 5400000 記為科學記號應為何？', a: '5.4×10⁶', distractors: ['5.4×10⁵', '54×10⁵', '0.54×10⁷'], unit: '科學記號' }
+                        ]);
+                    }
+                    break;
+                }
+                case '7_1_2': {
+                    const type = Math.random() < 0.5 ? 1 : 2;
+                    if (type === 1) {
+                        const den = choice([5, 7, 11]);
+                        const a = randInt(1, den - 1);
+                        const b = randInt(a + 1, den + 5);
+                        const ansNum = b - a;
+                        qObj = { q: `計算正負分數：(−${a}/${den}) + ${b}/${den} = ?`, a: `${ansNum}/${den}`, distractors: [`${a + b}/${den}`, `−${ansNum}/${den}`, `${ansNum + 1}/${den}`], unit: '正負分數四則運算' };
+                    } else {
+                        const num = choice([12, 18, 20, 24, 28, 30, 42, 45]);
+                        const primeFactors = {
+                            12: '2²×3', 18: '2×3²', 20: '2²×5', 24: '2³×3', 
+                            28: '2²×7', 30: '2×3×5', 42: '2×3×7', 45: '3²×5'
+                        };
+                        const wrongFactors = {
+                            12: ['2×6', '3×4', '2³×3'], 18: ['2²×3', '3×6', '2×9'],
+                            20: ['2×10', '4×5', '2³×5'], 24: ['3×8', '2²×6', '4×6'],
+                            28: ['4×7', '2×14', '2³×7'], 30: ['5×6', '3×10', '2²×5'],
+                            42: ['6×7', '2²×7', '3×14'], 45: ['5×9', '3³×5', '3×15']
+                        };
+                        qObj = { q: `將 ${num} 進行質因數分解：`, a: primeFactors[num], distractors: wrongFactors[num].sort(()=>Math.random()-0.5).slice(0,3), unit: '質因數分解' };
+                    }
+                    break;
+                }
+                case '7_1_3': {
+                    const type = Math.random() < 0.5 ? 1 : 2;
+                    if (type === 1) {
+                        const a = randInt(2, 5), b = randInt(1, 4), c = randInt(2, 6);
+                        const coeff = a + c, constTerm = a * b;
+                        qObj = { q: `化簡一元一次式：${a}(x + ${b}) + ${c}x = ?`, a: `${coeff}x + ${constTerm}`, distractors: [`${coeff}x + ${b}`, `${a * c}x + ${constTerm}`, `${coeff - 1}x + ${constTerm}`], unit: '一元一次式化簡' };
+                    } else {
+                        const x = randInt(-6, 9);
+                        const a = randInt(2, 5), b = randInt(3, 12);
+                        const rhs = a * x - b;
+                        qObj = { q: `解一元一次方程式：${a}x − ${b} = ${rhs}，則 x = ?`, a: String(x), distractors: makeNumericDistractors(x, 1, true), unit: '一元一次方程式' };
+                    }
+                    break;
+                }
+                case '7_2_1': {
+                    const x = randInt(2, 8), y = randInt(1, 6);
+                    const sum = x + y, diff = x - y;
+                    qObj = { q: `解聯立方程式：x + y = ${sum} 且 x − y = ${diff}，則 x = ?`, a: String(x), distractors: [String(y), String(x + 1), String(sum)], unit: '聯立方程式' };
+                    break;
+                }
+                case '7_2_2': {
+                    const px = randInt(2, 8) * (Math.random() < 0.5 ? 1 : -1);
+                    const py = randInt(2, 8) * (Math.random() < 0.5 ? 1 : -1);
+                    let quad = '第一象限';
+                    if (px < 0 && py > 0) quad = '第二象限';
+                    else if (px < 0 && py < 0) quad = '第三象限';
+                    else if (px > 0 && py < 0) quad = '第四象限';
+                    const allQuads = ['第一象限', '第二象限', '第三象限', '第四象限'].filter(q => q !== quad);
+                    qObj = { q: `直角坐標平面上，點 P(${px}, ${py}) 位於第幾象限？`, a: quad, distractors: allQuads, unit: '直角坐標平面' };
+                    break;
+                }
+                case '7_2_3': {
+                    const a = randInt(2, 5), k = randInt(2, 7), b = randInt(1, 9);
+                    const rhs = a * k + b;
+                    qObj = { q: `解一元一次不等式：${a}x + ${b} > ${rhs} 的解為何？`, a: `x > ${k}`, distractors: [`x < ${k}`, `x > −${k}`, `x < ${k + 2}`], unit: '一元一次不等式' };
+                    break;
+                }
+
+                // ==================== 國二 (八年級) ====================
+                case '8_1_1': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const sqs = [[4, 2], [9, 3], [16, 4], [25, 5], [36, 6], [49, 7], [64, 8], [81, 9], [100, 10], [121, 11], [144, 12]];
+                        const [n, r] = choice(sqs);
+                        qObj = { q: `計算平方根：√${n} 的值是多少？`, a: String(r), distractors: [`±${r}`, String(n / 2), String(r + 1)], unit: '平方根' };
+                    } else {
+                        const k = randInt(2, 7);
+                        qObj = { q: `利用乘法公式展開：(x + ${k})(x − ${k}) = ?`, a: `x² − ${k * k}`, distractors: [`x² + ${k * k}`, `x² − ${2 * k}x + ${k * k}`, `x² − ${k}`], unit: '乘法公式' };
+                    }
+                    break;
+                }
+                case '8_1_2': {
+                    const triples = [
+                        { a: 3, b: 4, c: 5 },
+                        { a: 6, b: 8, c: 10 },
+                        { a: 5, b: 12, c: 13 },
+                        { a: 8, b: 15, c: 17 },
+                        { a: 7, b: 24, c: 25 }
+                    ];
+                    const t = choice(triples);
+                    const askHyp = Math.random() < 0.6;
+                    if (askHyp) {
+                        qObj = { q: `直角三角形的兩股長分別為 ${t.a} 與 ${t.b}，則斜邊長為何？`, a: String(t.c), distractors: makeNumericDistractors(t.c, 1), unit: '畢氏定理' };
+                    } else {
+                        qObj = { q: `直角三角形的一股長為 ${t.a}，斜邊長為 ${t.c}，則另一股長為何？`, a: String(t.b), distractors: makeNumericDistractors(t.b, 1), unit: '畢氏定理' };
+                    }
+                    break;
+                }
+                case '8_1_3': {
+                    const r1 = randInt(1, 5), r2 = randInt(r1 + 1, 8);
+                    const b = r1 + r2, c = r1 * r2;
+                    qObj = { q: `一元二次方程式 x² − ${b}x + ${c} = 0 的兩根為何？`, a: `${r1} 或 ${r2}`, distractors: [`−${r1} 或 −${r2}`, `${r1} 或 −${r2}`, `−${r1} 或 ${r2}`], unit: '一元二次方程式' };
+                    break;
+                }
+                case '8_2_1': {
+                    const a1 = randInt(2, 10), d = randInt(2, 6), n = randInt(6, 12);
+                    const an = a1 + (n - 1) * d;
+                    qObj = { q: `等差數列首項 a₁ = ${a1}，公差 d = ${d}，則第 ${n} 項 a_${n} = ?`, a: String(an), distractors: [String(a1 + n * d), String(an - d), String(a1 * n)], unit: '等差數列' };
+                    break;
+                }
+                case '8_2_2': {
+                    const polys = [
+                        { name: '五邊形', n: 5, sum: 540 },
+                        { name: '六邊形', n: 6, sum: 720 },
+                        { name: '八邊形', n: 8, sum: 1080 }
+                    ];
+                    const p = choice(polys);
+                    if (Math.random() < 0.6) {
+                        qObj = { q: `凸${p.name}的「內角和」是幾度？`, a: `${p.sum}°`, distractors: ['360°', `${p.sum - 180}°`, `${p.sum + 180}°`], unit: '多邊形內角和' };
+                    } else {
+                        qObj = { q: `任意凸多邊形的「一組外角和」恆為幾度？`, a: '360°', distractors: ['180°', '540°', '720°'], unit: '多邊形外角和' };
+                    }
+                    break;
+                }
+                case '8_2_3': {
+                    const top = randInt(4, 12), bot = top + randInt(2, 6) * 2;
+                    const mid = (top + bot) / 2;
+                    qObj = { q: `梯形的上底為 ${top}、下底為 ${bot}，則兩腰中點連線段長為何？`, a: String(mid), distractors: [String(bot - top), String(top + bot), String(mid + 2)], unit: '梯形中線' };
+                    break;
+                }
+
+                // ==================== 國三 (九年級) ====================
+                case '9_1_1': {
+                    const pairs = [[1, 2], [2, 3], [3, 4], [2, 5], [3, 5]];
+                    const [a, b] = choice(pairs);
+                    qObj = { q: `兩個相似三角形的對應邊長比為 ${a} : ${b}，則其「面積比」為何？`, a: `${a * a} : ${b * b}`, distractors: [`${a} : ${b}`, `${a * 2} : ${b * 2}`, `${a * a * a} : ${b * b * b}`], unit: '相似三角形' };
+                    break;
+                }
+                case '9_1_2': {
+                    const arc = randInt(3, 14) * 10;
+                    const inscribed = arc / 2;
+                    qObj = { q: `圓 O 中，若一圓心角為 ${arc}°，則其所對同弧的「圓周角」為幾度？`, a: `${inscribed}°`, distractors: [`${arc}°`, `${arc * 2}°`, `${180 - arc > 0 ? 180 - arc : inscribed + 15}°`], unit: '圓心角與圓周角' };
+                    break;
+                }
+                case '9_1_3': {
+                    const type = randInt(1, 2);
+                    if (type === 1) {
+                        const ag = randInt(2, 8) * 2;
+                        const gd = ag / 2;
+                        qObj = { q: `G 為 △ABC 的重心，中線 AD 交於 G，若 AG = ${ag}，則 GD = ?`, a: String(gd), distractors: [String(ag), String(ag * 2), String(ag + gd)], unit: '三角形重心' };
+                    } else {
+                        qObj = choice([
+                            { q: '三角形的「外心」到三角形的哪三個位置等距離？', a: '三個頂點', distractors: ['三邊', '三邊中點', '三個垂足'], unit: '三角形外心' },
+                            { q: '三角形的「內心」是哪三條線段的交點？', a: '三內角平分線', distractors: ['三邊中垂線', '三條中線', '三邊上的高'], unit: '三角形內心' }
+                        ]);
+                    }
+                    break;
+                }
+                case '9_2_1': {
+                    const h = randInt(1, 6), k = randInt(2, 9);
+                    const sign = Math.random() < 0.5 ? '' : '−';
+                    qObj = { q: `二次函數 y = ${sign}2(x − ${h})² + ${k} 圖形的頂點坐標為何？`, a: `(${h}, ${k})`, distractors: [`(−${h}, ${k})`, `(${h}, −${k})`, `(−${h}, −${k})`], unit: '二次函數圖形' };
+                    break;
+                }
+                case '9_2_2': {
+                    qObj = choice([
+                        { q: '投擲一顆公正骰子一次，出現「偶數點」的機率為何？', a: '1/2', distractors: ['1/3', '1/6', '2/3'], unit: '機率' },
+                        { q: '投擲一顆公正骰子一次，出現「質數點(2, 3, 5)」的機率為何？', a: '1/2', distractors: ['1/3', '2/3', '5/6'], unit: '機率' },
+                        { q: '某班成績第 1 四分位數 Q₁ = 62，第 3 四分位數 Q₃ = 86，則四分位距 IQR = ?', a: '24', distractors: ['74', '148', '12'], unit: '四分位距' },
+                        { q: '同時投擲兩枚公正硬幣，出現「一正一反」的機率為何？', a: '1/2', distractors: ['1/4', '1/3', '3/4'], unit: '機率' }
+                    ]);
+                    break;
+                }
+                case '9_2_3': {
+                    const n = randInt(3, 8);
+                    const names = { 3: '三角柱', 4: '四角柱', 5: '五角柱', 6: '六角柱', 7: '七角柱', 8: '八角柱' };
+                    if (Math.random() < 0.5) {
+                        qObj = { q: `立體圖形「${names[n]}」共有幾個頂點？`, a: `${n * 2}個`, distractors: [`${n + 2}個`, `${n * 3}個`, `${n + 1}個`], unit: '立體圖形' };
+                    } else {
+                        qObj = { q: `立體圖形「${names[n]}」共有幾條邊(稜)？`, a: `${n * 3}條`, distractors: [`${n * 2}條`, `${n + 2}條`, `${n * 4}條`], unit: '立體圖形' };
+                    }
+                    break;
+                }
+                default: {
+                    const a = randInt(5, 15), b = randInt(5, 15);
+                    qObj = { q: `${a} + ${b} = ?`, a: String(a + b), distractors: makeNumericDistractors(a + b, 1), unit: '基本運算' };
+                }
+            }
+
+            if (!qObj.unit) {
+                qObj.unit = unitText;
+            }
+            return qObj;
+        }
+
+        // =========================================================================
+        // 6. SVG 視覺繪製：舉牌可愛地鼠與充氣木槌
+        // =========================================================================
+        function getPlacardMoleSVG(answerText, state = 'normal') {
+            // 依據答案字數微調字體大小
+            let fontSize = '22px';
+            if (answerText.length >= 7) fontSize = '15px';
+            else if (answerText.length >= 5) fontSize = '18px';
+
+            const isCorrectHit = state === 'correct';
+            const isWrongHit = state === 'wrong';
+
+            // 牌子背景色
+            const boardFill = isCorrectHit ? '#bbf7d0' : (isWrongHit ? '#fecaca' : '#fffbeb');
+            const boardStroke = isCorrectHit ? '#15803d' : (isWrongHit ? '#b91c1c' : '#78350f');
+
+            // 眼睛表情
+            let eyesSVG = `
+                <ellipse cx="62" cy="116" rx="5.5" ry="7.5" fill="#0f172a"/>
+                <circle cx="60" cy="113.5" r="2.2" fill="white"/>
+                <ellipse cx="98" cy="116" rx="5.5" ry="7.5" fill="#0f172a"/>
+                <circle cx="96" cy="113.5" r="2.2" fill="white"/>
+            `;
+            if (isCorrectHit) {
+                // 星星開心暈眩眼
+                eyesSVG = `
+                    <text x="61" y="121" font-size="16" text-anchor="middle">⭐</text>
+                    <text x="99" y="121" font-size="16" text-anchor="middle">⭐</text>
+                `;
+            } else if (isWrongHit) {
+                // X_X 痛痛眼
+                eyesSVG = `
+                    <g stroke="#1e293b" stroke-width="3.5" stroke-linecap="round">
+                        <line x1="55" y1="110" x2="67" y2="122"/><line x1="67" y1="110" x2="55" y2="122"/>
+                        <line x1="93" y1="110" x2="105" y2="122"/><line x1="105" y1="110" x2="93" y2="122"/>
+                    </g>
+                `;
+            }
+
+            return `
+                <svg viewBox="0 0 160 175" class="w-36 h-40 md:w-44 md:h-48 select-none drop-shadow-xl overflow-visible">
+                    <!-- 圓耳朵 -->
+                    <circle cx="42" cy="96" r="12" fill="#92400e" stroke="#451a03" stroke-width="3"/>
+                    <circle cx="42" cy="96" r="6" fill="#f472b6"/>
+                    <circle cx="118" cy="96" r="12" fill="#92400e" stroke="#451a03" stroke-width="3"/>
+                    <circle cx="118" cy="96" r="6" fill="#f472b6"/>
+
+                    <!-- 地鼠身體與圓頭 -->
+                    <path d="M36 170 L36 118 Q36 80 80 80 Q124 80 124 118 L124 170 Z" fill="#b45309" stroke="#451a03" stroke-width="4"/>
+                    <!-- 淺色肚皮 -->
+                    <ellipse cx="80" cy="150" rx="28" ry="22" fill="#fef3c7"/>
+
+                    <!-- 經典客家/工程花布小頭巾/安全帽裝飾 -->
+                    <path d="M46 98 Q80 72 114 98 Z" fill="#eab308" stroke="#713f12" stroke-width="3"/>
+                    <rect x="42" y="95" width="76" height="7" rx="3.5" fill="#facc15" stroke="#713f12" stroke-width="2"/>
+
+                    <!-- 眼睛 -->
+                    ${eyesSVG}
+
+                    <!-- 腮紅與鼻子與門牙 -->
+                    <ellipse cx="49" cy="125" rx="6" ry="3.5" fill="#fb7185" opacity="0.8"/>
+                    <ellipse cx="111" cy="125" rx="6" ry="3.5" fill="#fb7185" opacity="0.8"/>
+                    <polygon points="80,127 74,120 86,120" fill="#e11d48"/>
+                    <rect x="76" y="130" width="8" height="7" rx="1.5" fill="white" stroke="#451a03" stroke-width="1.5"/>
+                    <path d="M70 129 Q80 135 90 129" stroke="#451a03" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+                    <!-- 高舉的木牌支架 -->
+                    <rect x="76" y="52" width="8" height="28" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+
+                    <!-- 答案大木牌 -->
+                    <rect x="14" y="8" width="132" height="52" rx="12" fill="${boardFill}" stroke="${boardStroke}" stroke-width="4.5" filter="drop-shadow(0 4px 4px rgba(0,0,0,0.3))"/>
+                    <rect x="19" y="13" width="122" height="42" rx="8" fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4 2"/>
+
+                    <!-- 答案文字 -->
+                    <text x="80" y="41" font-size="${fontSize}" font-weight="900" fill="#1e293b" text-anchor="middle" class="math-font">${answerText}</text>
+
+                    <!-- 兩隻舉牌的小爪子 -->
+                    <ellipse cx="32" cy="60" rx="9" ry="7" fill="#d97706" stroke="#451a03" stroke-width="2.5"/>
+                    <ellipse cx="128" cy="60" rx="9" ry="7" fill="#d97706" stroke="#451a03" stroke-width="2.5"/>
+                </svg>
+            `;
+        }
+
+        function getHammerSVG() {
+            return `
+                <svg viewBox="0 0 140 140" class="w-24 h-24 md:w-28 md:h-28 drop-shadow-[0_10px_12px_rgba(0,0,0,0.5)] pointer-events-none">
+                    <path d="M48 95 L16 130" stroke="#78350f" stroke-width="11" stroke-linecap="round"/>
+                    <g transform="rotate(36 80 55)">
+                        <rect x="36" y="26" width="82" height="54" rx="12" fill="#dc2626" stroke="#450a0a" stroke-width="4"/>
+                        <rect x="48" y="28" width="14" height="50" fill="#facc15"/>
+                        <rect x="70" y="28" width="14" height="50" fill="#facc15"/>
+                        <rect x="92" y="28" width="14" height="50" fill="#facc15"/>
+                        <ellipse cx="36" cy="53" rx="6" ry="25" fill="#fef08a" stroke="#713f12" stroke-width="3"/>
+                        <ellipse cx="118" cy="53" rx="6" ry="25" fill="#fef08a" stroke="#713f12" stroke-width="3"/>
+                    </g>
+                </svg>
+            `;
+        }
+
+        // =========================================================================
+        // 7. 舞台初始化與遊戲迴圈控制
+        // =========================================================================
+        function buildHolesStage() {
+            const stage = document.getElementById('holes-stage');
+            stage.innerHTML = '';
+
+            for (let i = 0; i < TOTAL_HOLES; i++) {
+                const slot = document.createElement('div');
+                slot.className = "relative flex flex-col items-center justify-end h-44 md:h-52 select-none";
+                slot.innerHTML = `
+                    <!-- 地鼠鑽出遮罩區 -->
+                    <div class="mole-mask absolute bottom-6 w-44 h-48 flex items-end justify-center z-10 cursor-pointer" onclick="whackHole(${i})">
+                        <div id="mole-wrap-${i}" class="mole-wrapper flex items-center justify-center">
+                            <div id="mole-svg-${i}"></div>
+                        </div>
+                    </div>
+
+                    <!-- 立體土丘與深坑洞口 -->
+                    <div onclick="whackHole(${i})" class="dirt-mound w-40 sm:w-44 md:w-52 h-16 md:h-20 rounded-[50%] flex items-center justify-center relative z-0 cursor-pointer">
+                        <div class="hole-pit w-32 sm:w-36 md:w-44 h-10 md:h-12 rounded-[50%] border-2 border-amber-950"></div>
+                    </div>
+
+                    <!-- 前景小草叢遮擋地洞下緣 -->
+                    <div class="pointer-events-none relative z-20 -mt-3 flex items-center justify-between w-36 px-2 text-xs md:text-sm opacity-90">
+                        <span>🌱</span><span>🌿</span><span>🌱</span>
+                    </div>
+
+                    <!-- 槌子與飄字特效層 -->
+                    <div id="fx-layer-${i}" class="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"></div>
+                `;
+                stage.appendChild(slot);
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            isPlaying = true;
+            score = 0;
+            combo = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            questionIndex = 0;
+            timeLeft = 90;
+            answeredLog = [];
+
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('result-modal').classList.remove('flex');
+
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+            document.getElementById('btn-back-menu').classList.remove('hidden');
+
+            buildHolesStage();
+            updateScoreUI();
+            document.getElementById('timer-display').innerText = timeLeft;
+
+            // 出第一題並啟動地鼠波次
+            nextQuestion();
+
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                if (!isPlaying) return;
+                timeLeft--;
+                const timerEl = document.getElementById('timer-display');
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 10) {
+                    timerEl.className = "text-xl md:text-2xl font-black text-rose-400 animate-ping math-font";
+                } else {
+                    timerEl.className = "text-xl md:text-2xl font-black text-emerald-300 math-font";
+                }
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function returnToMenu() {
+            isPlaying = false;
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            if (moleWaveTimeout) clearTimeout(moleWaveTimeout);
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('flex');
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('result-modal').classList.remove('flex');
+            document.getElementById('btn-back-menu').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+        }
+
+        // 切換下一道數學題
+        function nextQuestion() {
+            if (!isPlaying) return;
+            if (moleWaveTimeout) clearTimeout(moleWaveTimeout);
+
+            questionIndex++;
+            currentQuestion = generateMathQuestion(selectedGrade, selectedTerm, selectedExam);
+
+            document.getElementById('question-unit-tag').innerText = `📌 ${currentQuestion.unit}`;
+            document.getElementById('question-counter-tag').innerText = `第 ${questionIndex} 題`;
+            document.getElementById('question-text').innerText = currentQuestion.q;
+
+            // 先把所有地鼠縮回洞裡，短暫延遲後冒出新的一波舉牌地鼠
+            hideAllMoles();
+            moleWaveTimeout = setTimeout(() => {
+                spawnMoleWave();
+            }, 340);
+        }
+
+        function skipQuestion() {
+            if (!isPlaying) return;
+            nextQuestion();
+            showBanner('🔄 已切換新題目！', 'text-amber-700');
+            setTimeout(() => {
+                const banner = document.getElementById('feedback-banner');
+                if (banner.innerText.includes('換新題目')) {
+                    banner.className = 'h-6 text-sm md:text-base font-extrabold transition-opacity opacity-0';
+                }
+            }, 1500);
+        }
+
+        function hideAllMoles() {
+            for (let i = 0; i < TOTAL_HOLES; i++) {
+                holeStates[i].isUp = false;
+                holeStates[i].hitLocked = false;
+                const wrap = document.getElementById(`mole-wrap-${i}`);
+                if (wrap) {
+                    wrap.className = 'mole-wrapper flex items-center justify-center';
+                }
+            }
+        }
+
+        // 讓 4 隻地鼠隨機從 6 個洞口冒出（1隻舉正解，3隻舉誘答）
+        function spawnMoleWave() {
+            if (!isPlaying || !currentQuestion) return;
+            hideAllMoles();
+
+            // 隨機挑選 4 個洞口
+            const indices = [0, 1, 2, 3, 4, 5].sort(() => Math.random() - 0.5).slice(0, 4);
+            const options = [
+                { ans: currentQuestion.a, isCorrect: true },
+                { ans: currentQuestion.distractors[0], isCorrect: false },
+                { ans: currentQuestion.distractors[1], isCorrect: false },
+                { ans: currentQuestion.distractors[2], isCorrect: false }
+            ].sort(() => Math.random() - 0.5);
+
+            playSound('pop');
+
+            indices.forEach((holeIdx, idx) => {
+                const opt = options[idx];
+                holeStates[holeIdx] = {
+                    isUp: true,
+                    answer: opt.ans,
+                    isCorrect: opt.isCorrect,
+                    hitLocked: false
+                };
+
+                const svgContainer = document.getElementById(`mole-svg-${holeIdx}`);
+                const wrap = document.getElementById(`mole-wrap-${holeIdx}`);
+                if (svgContainer && wrap) {
+                    svgContainer.innerHTML = getPlacardMoleSVG(opt.ans, 'normal');
+                    wrap.className = 'mole-wrapper up flex items-center justify-center';
+                }
+            });
+
+            // 根據玩家選擇的速度決定地鼠停留秒數，若沒打中正解則換洞重新冒出！
+            const speedMode = document.getElementById('speed-select').value;
+            const stayDuration = speedMode === 'slow' ? 4600 : (speedMode === 'fast' ? 2500 : 3500);
+
+            if (moleWaveTimeout) clearTimeout(moleWaveTimeout);
+            moleWaveTimeout = setTimeout(() => {
+                if (!isPlaying) return;
+                hideAllMoles();
+                moleWaveTimeout = setTimeout(() => {
+                    spawnMoleWave();
+                }, 400);
+            }, stayDuration);
+        }
+
+        // 玩家點擊敲擊某個地洞
+        function whackHole(index) {
+            if (!isPlaying) return;
+            const state = holeStates[index];
+            if (!state.isUp || state.hitLocked) return;
+
+            state.hitLocked = true;
+            playSound('whack');
+
+            const fxLayer = document.getElementById(`fx-layer-${index}`);
+            const svgContainer = document.getElementById(`mole-svg-${index}`);
+            const wrap = document.getElementById(`mole-wrap-${index}`);
+            const board = document.getElementById('question-board');
+
+            // 觸發畫面震動
+            board.classList.remove('shake-active');
+            void board.offsetWidth;
+            board.classList.add('shake-active');
+
+            if (state.isCorrect) {
+                // ======= 打中正確答案地鼠 =======
+                if (moleWaveTimeout) clearTimeout(moleWaveTimeout);
+                playSound('correct');
+
+                combo++;
+                correctCount++;
+                const bonus = combo >= 3 ? 5 : 0;
+                const addPts = 10 + bonus;
+                score += addPts;
+                window.score = score; // 同步至全域供排行榜使用
+                updateScoreUI();
+
+                // 紀錄答對
+                answeredLog.unshift({
+                    q: currentQuestion.q,
+                    picked: state.answer,
+                    correctAns: currentQuestion.a,
+                    isCorrect: true
+                });
+
+                // 替換為眼冒金星的地鼠與敲擊特效
+                svgContainer.innerHTML = getPlacardMoleSVG(state.answer, 'correct');
+                wrap.className = 'mole-wrapper hit-correct flex items-center justify-center';
+
+                fxLayer.innerHTML = `
+                    <div class="hammer-anim absolute -top-6 right-4 z-40">${getHammerSVG()}</div>
+                    <div class="score-float absolute top-4 left-1/2 z-50 bg-emerald-600 text-yellow-200 border-2 border-yellow-300 px-3 py-1 rounded-full font-black text-lg shadow-lg whitespace-nowrap">
+                        ⭕ +${addPts} 分!
+                    </div>
+                `;
+
+                showBanner(`🎉 答對了！正確答案就是 ${state.answer}（+${addPts}分）`, 'text-emerald-700');
+
+                setTimeout(() => {
+                    fxLayer.innerHTML = '';
+                    // 切換題目時，務必將上一題的提示橫幅隱藏，避免殘留
+                    document.getElementById('feedback-banner').className = 'h-6 text-sm md:text-base font-extrabold transition-opacity opacity-0';
+                    nextQuestion();
+                }, 700);
+
+            } else {
+                // ======= 打錯地鼠 (扣分並縮回該隻地鼠) =======
+                playSound('wrong');
+                combo = 0;
+                wrongCount++;
+                score = Math.max(0, score - 5);
+                updateScoreUI();
+
+                // 紀錄誤擊
+                answeredLog.unshift({
+                    q: currentQuestion.q,
+                    picked: state.answer,
+                    correctAns: currentQuestion.a,
+                    isCorrect: false
+                });
+
+                svgContainer.innerHTML = getPlacardMoleSVG(state.answer, 'wrong');
+                wrap.className = 'mole-wrapper hit-wrong flex items-center justify-center';
+
+                fxLayer.innerHTML = `
+                    <div class="hammer-anim absolute -top-6 right-4 z-40">${getHammerSVG()}</div>
+                    <div class="score-float absolute top-4 left-1/2 z-50 bg-rose-600 text-white border-2 border-rose-200 px-3 py-1 rounded-full font-black text-lg shadow-lg whitespace-nowrap">
+                        ❌ -5 分
+                    </div>
+                `;
+
+                showBanner(`⚠️ 敲錯囉！「${state.answer}」不是正確答案，再找找看！`, 'text-rose-600');
+
+                setTimeout(() => {
+                    state.isUp = false;
+                    fxLayer.innerHTML = '';
+                }, 550);
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-display').innerText = score;
+            const comboBadge = document.getElementById('combo-badge');
+            const comboDisplay = document.getElementById('combo-display');
+            if (combo >= 2) {
+                comboBadge.classList.remove('hidden');
+                comboBadge.classList.add('flex');
+                comboDisplay.innerText = combo;
+            } else {
+                comboBadge.classList.add('hidden');
+                comboBadge.classList.remove('flex');
+            }
+        }
+
+        function showBanner(msg, colorClass) {
+            const banner = document.getElementById('feedback-banner');
+            banner.innerText = msg;
+            banner.className = `h-6 text-sm md:text-base font-extrabold transition-opacity opacity-100 ${colorClass}`;
+        }
+
+        // =========================================================================
+        // 8. 遊戲結束結算與解題回顧
+        // =========================================================================
+        function endGame() {
+            isPlaying = false;
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            if (moleWaveTimeout) clearTimeout(moleWaveTimeout);
+            hideAllMoles();
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-correct').innerText = correctCount;
+            document.getElementById('final-wrong').innerText = wrongCount;
+            document.getElementById('result-scope-title').innerText = document.getElementById('current-scope-badge').innerText;
+
+            window.score = score; // 結算時確保分數同步
+
+            // 重置提交成績按鈕狀態
+            const submitBtn = document.getElementById('submit-score-btn');
+            const nameInput = document.getElementById('player-name');
+            if(submitBtn && nameInput) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = '送出成績';
+                submitBtn.className = 'px-4 py-2 bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white rounded-lg font-bold transition shadow cursor-pointer whitespace-nowrap';
+                if(score <= 0) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerText = '0分無法登記';
+                    submitBtn.className = 'px-4 py-2 bg-slate-400 text-white rounded-lg font-bold shadow cursor-not-allowed whitespace-nowrap';
+                }
+            }
+
+            const listEl = document.getElementById('history-list');
+            listEl.innerHTML = '';
+
+            if (answeredLog.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-amber-800/70 py-4 text-sm font-bold">本局尚未敲擊任何地鼠喔！</div>`;
+            } else {
+                answeredLog.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = `p-2.5 rounded-xl border-2 text-xs md:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-1 ${
+                        item.isCorrect ? 'bg-emerald-50 border-emerald-500/60 text-emerald-950' : 'bg-rose-50 border-rose-500/60 text-rose-950'
+                    }`;
+                    row.innerHTML = `
+                        <div class="font-bold math-font">${item.isCorrect ? '⭕' : '❌'} ${item.q}</div>
+                        <div class="shrink-0 font-black">
+                            ${item.isCorrect
+                                ? `<span class="text-emerald-700">命中正解：${item.correctAns}</span>`
+                                : `<span class="text-rose-600 mr-2">誤擊：${item.picked}</span><span class="text-emerald-700">正解：${item.correctAns}</span>`
+                            }
+                        </div>
+                    `;
+                    listEl.appendChild(row);
+                });
+            }
+
+            const modal = document.getElementById('result-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // 網頁載入時初始化選單
+        window.onload = function () {
+            window.selectedGrade = selectedGrade;
+            updateMenuUI();
+        };
+
+        // =========================================================================
+        // 9. 排行榜 UI 控制函式
+        // =========================================================================
+        window.openLeaderboard = function() {
+            document.getElementById('leaderboard-modal').classList.remove('hidden');
+            document.getElementById('leaderboard-modal').classList.add('flex');
+            document.getElementById('leaderboard-grade-select').value = window.selectedGrade;
+            if(window.fetchAndShowLeaderboard) {
+                window.fetchAndShowLeaderboard(window.selectedGrade);
+            }
+        };
+
+        window.closeLeaderboard = function() {
+            document.getElementById('leaderboard-modal').classList.add('hidden');
+            document.getElementById('leaderboard-modal').classList.remove('flex');
+        };
+
+        window.submitScoreAction = function() {
+            const nameInput = document.getElementById('player-name');
+            const name = nameInput.value;
+            if(!name.trim()) {
+                nameInput.classList.add('ring-2', 'ring-rose-500');
+                setTimeout(() => nameInput.classList.remove('ring-2', 'ring-rose-500'), 1000);
+                return;
+            }
+            if(window.submitScoreToCloud) {
+                window.submitScoreToCloud(name);
+            }
+        };
+    </script>
+</body>
+</html>
