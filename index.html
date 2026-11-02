@@ -28,6 +28,13 @@
         }
         .fever-active { animation: feverGlow 0.9s infinite alternate; }
 
+        /* 題目板狂熱發光 */
+        @keyframes feverBoardBorder {
+            0%, 100% { border-color: #ef4444; box-shadow: 0 10px 0 #7f1d1d, 0 0 25px rgba(239, 68, 68, 0.8); }
+            50% { border-color: #fbbf24; box-shadow: 0 10px 0 #78350f, 0 0 35px rgba(251, 191, 36, 0.95); }
+        }
+        .fever-board { animation: feverBoardBorder 0.7s infinite alternate; }
+
         /* 動畫特效 */
         @keyframes boardShake {
             0%, 100% { transform: translate(0, 0); }
@@ -65,6 +72,9 @@
             <button onclick="openLeaderboardModal()" class="px-2.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs md:text-sm border-2 border-amber-200 shadow">
                 🏆 排行榜
             </button>
+            <button id="btn-bgm" onclick="toggleBgm()" class="px-2.5 py-1.5 rounded-full bg-purple-800 hover:bg-purple-700 text-amber-100 font-bold text-xs md:text-sm border-2 border-purple-400 shadow">
+                🎵 音樂: 開
+            </button>
             <button id="btn-sound" onclick="toggleSound()" class="px-2.5 py-1.5 rounded-full bg-amber-800 hover:bg-amber-700 text-amber-100 font-bold text-xs md:text-sm border-2 border-amber-600 shadow">
                 🔊 音效: 開
             </button>
@@ -77,7 +87,8 @@
         </div>
     </header>
 
-    <div id="toast-msg" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 hidden bg-amber-950/95 text-amber-100 border-2 border-amber-400 px-5 py-2.5 rounded-full font-extrabold text-sm shadow-2xl transition-all"></div>
+    <!-- 浮動通知改為右上角且不阻擋滑鼠點擊，徹底解決擋住題目問題 -->
+    <div id="toast-msg" class="fixed top-2.5 left-1/2 -translate-x-1/2 z-50 hidden pointer-events-none bg-amber-950/90 text-amber-100 border-2 border-amber-400 px-4 py-1.5 rounded-full font-extrabold text-xs md:text-sm shadow-xl transition-all"></div>
 
     <main id="game-stage" class="flex-grow relative flex flex-col items-center justify-between sky-day overflow-hidden py-3 px-2 md:px-6">
         <div id="celestial-body" class="absolute top-6 right-8 w-16 h-16 md:w-20 md:h-20 rounded-full bg-yellow-300 border-4 border-amber-400 shadow-[0_0_40px_rgba(250,204,21,0.9)] pointer-events-none z-0"></div>
@@ -175,14 +186,14 @@
                 </div>
             </div>
 
-            <!-- 速度與模式 -->
+            <!-- 速度與模式 (已改為慢速5秒、快速2秒) -->
             <div class="bg-amber-100/90 border-2 border-amber-500 rounded-2xl p-3.5 mb-5 flex flex-col gap-3">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-black text-amber-900">地鼠速度：</span>
+                    <span class="text-xs font-black text-amber-900">地鼠出現速度：</span>
                     <select id="speed-select" class="bg-white border-2 border-amber-700 rounded-xl px-2 py-1 text-xs md:text-sm font-black text-amber-950">
-                        <option value="slow">🐢 慢速 (4.5秒)</option>
+                        <option value="slow">🐢 慢速 (5秒)</option>
                         <option value="normal" selected>🐹 標準 (3.5秒)</option>
-                        <option value="fast">⚡ 快速 (2.5秒)</option>
+                        <option value="fast">⚡ 快速 (2秒)</option>
                     </select>
                 </div>
             </div>
@@ -196,14 +207,18 @@
 
         <!-- 遊戲畫面 -->
         <section id="play-screen" class="hidden relative z-20 w-full max-w-4xl flex-col items-center justify-between flex-grow my-auto">
-            <div id="question-board" class="w-full bg-[#b45309] border-[6px] border-[#78350f] rounded-3xl p-3 md:p-4 shadow-[0_10px_0_#451a03] mb-2">
+            <div id="question-board" class="w-full bg-[#b45309] border-[6px] border-[#78350f] rounded-3xl p-3 md:p-4 shadow-[0_10px_0_#451a03] mb-2 transition-all">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-1.5 md:gap-2">
                         <div class="bg-[#451a03] text-amber-200 px-3.5 py-1 rounded-full border-2 border-amber-600 font-black text-sm md:text-base shadow-inner">
                             🏆 得分 <span id="score-display" class="text-yellow-300 text-lg md:text-2xl">0</span>
                         </div>
                         <div id="combo-badge" class="hidden bg-gradient-to-r from-red-600 to-amber-500 text-white px-3 py-1 rounded-full border-2 border-yellow-200 font-black text-xs md:text-sm animate-bounce">
                             🔥 <span id="combo-count">0</span> 連擊
+                        </div>
+                        <!-- 狂熱狀態專屬徽章：固定於上方資訊列，絕不遮擋題目 -->
+                        <div id="fever-status-badge" class="hidden bg-gradient-to-r from-rose-600 via-orange-500 to-yellow-500 text-white px-3 py-1 rounded-full border-2 border-white font-black text-xs md:text-sm shadow-lg animate-pulse">
+                            ⚡ 狂熱雙倍得分中！
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -329,7 +344,7 @@
         const ADMIN_PASSWORD = 'LKJHMATH';
         
         let selectedGrade = 7, selectedSemester = 1, selectedExam = 1, focusIndex = 0;
-        let selectedBankMode = 'builtin', soundEnabled = true, adminUnlocked = false;
+        let selectedBankMode = 'builtin', soundEnabled = true, bgmEnabled = true, adminUnlocked = false;
         
         let score = 0, combo = 0, isFever = false, timeLeft = 90;
         let correctCount = 0, wrongCount = 0, questionCount = 0;
@@ -400,15 +415,134 @@
 
         const GRADE_SHORT = {1:'小一', 2:'小二', 3:'小三', 4:'小四', 5:'小五', 6:'小六', 7:'國一', 8:'國二', 9:'國三'};
 
-        // 音效與提示
+        // =========================================================================
+        // 音效與動態背景音樂 (BGM) 引擎
+        // =========================================================================
         let audioCtx = null;
+        let bgmStepTimer = null;
+        let bgmStepIndex = 0;
+
+        // 定義不同情境的音階頻率 (Hz)
+        // 1. 一般正常節奏：輕快大調
+        const BGM_MELODY_NORMAL = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23, 440.00, 587.33, 440.00, 349.23, 329.63, 392.00, 493.88, 523.25];
+        const BGM_BASS_NORMAL   = [130.81, 196.00, 130.81, 196.00, 146.83, 220.00, 146.83, 220.00];
+
+        // 2. 時間緊迫 (剩餘 <= 30秒)：稍微加快的緊張小調
+        const BGM_MELODY_HURRY  = [329.63, 392.00, 440.00, 493.88, 523.25, 493.88, 440.00, 392.00, 349.23, 440.00, 523.25, 587.33, 659.25, 587.33, 523.25, 493.88];
+        const BGM_BASS_HURRY    = [164.81, 246.94, 164.81, 246.94, 174.61, 261.63, 196.00, 246.94];
+
+        // 3. 最後衝刺 (剩餘 <= 15秒)：高速半音階急促感
+        const BGM_MELODY_PANIC  = [440.00, 466.16, 493.88, 523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 659.25, 622.25, 587.33, 554.37, 523.25, 493.88, 466.16];
+        const BGM_BASS_PANIC    = [220.00, 220.00, 233.08, 233.08, 246.94, 246.94, 261.63, 246.94];
+
+        // 4. 狂熱模式 (Fever Mode)：熱血高亢電玩風琶音
+        const BGM_MELODY_FEVER  = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1174.66, 1318.51, 587.33, 739.99, 880.00, 1174.66, 880.00, 1174.66, 1318.51, 1567.98];
+        const BGM_BASS_FEVER    = [261.63, 392.00, 293.66, 440.00, 329.63, 493.88, 349.23, 523.25];
+
         function initAudio() {
             if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
-        function toggleSound() { soundEnabled = !soundEnabled; document.getElementById('btn-sound').innerText = soundEnabled ? '🔊 音效: 開' : '🔇 音效: 關'; }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('btn-sound').innerText = soundEnabled ? '🔊 音效: 開' : '🔇 音效: 關';
+        }
+
+        function toggleBgm() {
+            bgmEnabled = !bgmEnabled;
+            document.getElementById('btn-bgm').innerText = bgmEnabled ? '🎵 音樂: 開' : '🔇 音樂: 關';
+            if (bgmEnabled && isPlaying) {
+                initAudio();
+                startBgmLoop();
+            } else {
+                stopBgmLoop();
+            }
+        }
+
+        function startBgmLoop() {
+            stopBgmLoop();
+            if (!bgmEnabled || !isPlaying) return;
+            bgmStepIndex = 0;
+            scheduleNextBgmNote();
+        }
+
+        function stopBgmLoop() {
+            if (bgmStepTimer) {
+                clearTimeout(bgmStepTimer);
+                bgmStepTimer = null;
+            }
+        }
+
+        function scheduleNextBgmNote() {
+            if (!isPlaying || !bgmEnabled) return;
+
+            // 根據「是否進入狂熱模式」與「剩餘秒數」決定音樂旋律與節奏快慢
+            let intervalMs = 230;
+            let melodyArr = BGM_MELODY_NORMAL;
+            let bassArr = BGM_BASS_NORMAL;
+            let leadWave = 'triangle';
+
+            if (isFever) {
+                // 狂熱模式：極速高昂旋律（若最後15秒則更快）
+                intervalMs = timeLeft <= 15 ? 105 : 125;
+                melodyArr = BGM_MELODY_FEVER;
+                bassArr = BGM_BASS_FEVER;
+                leadWave = 'square';
+            } else if (timeLeft <= 15) {
+                // 最後 15 秒：緊急衝刺節奏
+                intervalMs = 120;
+                melodyArr = BGM_MELODY_PANIC;
+                bassArr = BGM_BASS_PANIC;
+                leadWave = 'sawtooth';
+            } else if (timeLeft <= 30) {
+                // 剩餘 30 秒內：加快節奏
+                intervalMs = 165;
+                melodyArr = BGM_MELODY_HURRY;
+                bassArr = BGM_BASS_HURRY;
+                leadWave = 'triangle';
+            }
+
+            if (audioCtx && audioCtx.state === 'running') {
+                const now = audioCtx.currentTime;
+                const noteFreq = melodyArr[bgmStepIndex % melodyArr.length];
+                const bassFreq = bassArr[Math.floor(bgmStepIndex / 2) % bassArr.length];
+                const noteDur = (intervalMs / 1000) * 0.82;
+
+                // 主旋律聲部
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = leadWave;
+                osc.frequency.setValueAtTime(noteFreq, now);
+                const leadVol = leadWave === ' triangle' ? 0.06 : 0.038;
+                gain.gain.setValueAtTime(leadVol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + noteDur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + noteDur);
+
+                // 低音伴奏聲部 (每兩拍強化節奏感)
+                if (bgmStepIndex % 2 === 0) {
+                    const bOsc = audioCtx.createOscillator();
+                    const bGain = audioCtx.createGain();
+                    bOsc.type = 'sine';
+                    bOsc.frequency.setValueAtTime(bassFreq, now);
+                    bGain.gain.setValueAtTime(0.065, now);
+                    bGain.gain.exponentialRampToValueAtTime(0.001, now + noteDur * 1.4);
+                    bOsc.connect(bGain);
+                    bGain.connect(audioCtx.destination);
+                    bOsc.start(now);
+                    bOsc.stop(now + noteDur * 1.4);
+                }
+            }
+
+            bgmStepIndex++;
+            bgmStepTimer = setTimeout(scheduleNextBgmNote, intervalMs);
+        }
+
         function playTone(type) {
             if (!soundEnabled || !audioCtx) return;
             const now = audioCtx.currentTime;
@@ -434,14 +568,36 @@
                 osc.start(now); osc.stop(now + 0.4);
             }
         }
+
         function toggleFullscreen() {
             if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
             else document.exitFullscreen();
         }
+
+        let toastTimer = null;
         function showToast(msg) {
             const toast = document.getElementById('toast-msg');
-            toast.innerText = msg; toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+            toast.innerText = msg;
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.add('hidden'), 2600);
+        }
+
+        // 控制狂熱模式 UI 狀態（不遮擋題目，改由題目外框與專屬徽章呈現）
+        function setFeverVisual(active) {
+            isFever = active;
+            const stageEl = document.getElementById('game-stage');
+            const boardEl = document.getElementById('question-board');
+            const badgeEl = document.getElementById('fever-status-badge');
+            if (active) {
+                stageEl.classList.add('fever-active');
+                boardEl.classList.add('fever-board');
+                badgeEl.classList.remove('hidden');
+            } else {
+                stageEl.classList.remove('fever-active');
+                boardEl.classList.remove('fever-board');
+                badgeEl.classList.add('hidden');
+            }
         }
 
         // DOM 初始化與主選單控制
@@ -1341,7 +1497,6 @@
                     } else { // 5-1 資料整理與統計圖表（累積次數、相對次數、累積相對次數）
                         const type = randInt(1, 3);
                         if (type === 1) {
-                            // 相對次數分配 (%)
                             const total = choice([25, 40, 50, 100, 200]);
                             const pct = choice([12, 16, 20, 24, 28, 32, 36, 40]);
                             const count = (total * pct) / 100;
@@ -1354,7 +1509,6 @@
                                 a = `${c2 * 2}%`; d = [`${c2}%`, `${100 - c2 * 2}%`, `${c2 * 2 + 4}%`];
                             }
                         } else if (type === 2) {
-                            // 累積次數分配與折線圖
                             const c1 = randInt(4, 10), c2 = randInt(6, 14), c3 = randInt(5, 12);
                             if (Math.random() < 0.5) {
                                 q = `【5-1 累積次數】成績由低至高前三組人數依序為 ${c1}、${c2}、${c3} 人，則第三組的「累積次數」為多少人？`;
@@ -1365,7 +1519,6 @@
                                 a = `${c3}人`; d = [`${cumCur}人`, `${cumPrev + cumCur}人`, `${Math.abs(cumPrev - c3)}人`];
                             }
                         } else {
-                            // 累積相對次數分配與折線圖
                             const total = choice([40, 50, 100]);
                             const pPrev = choice([25, 30, 40, 45]);
                             const pDiff = choice([15, 20, 25, 30]);
@@ -1442,23 +1595,20 @@
                             q = `平行四邊形 ABCD 對角線交於 O 點，若 OA = ${oa}、OB = ${ob}，則對角線長 AC + BD = ?`;
                             a = `${2 * (oa + ob)}`; d = [`${oa + ob}`, `${2 * oa + ob}`, `${4 * (oa + ob)}`];
                         }
-                    } else { // 4-3 特殊四邊形與梯形性質（長方形、菱形、箏形、正方形、梯形）
+                    } else { // 4-3 特殊四邊形與梯形性質
                         const type = randInt(1, 4);
                         if (type === 1) {
-                            // 菱形與箏形對角線面積公式（對角線互相垂直）
                             const d1 = randInt(3, 9) * 2, d2 = randInt(4, 10) * 2;
                             const shape = Math.random() < 0.5 ? '菱形' : '箏形(鳶形)';
                             const area = (d1 * d2) / 2;
                             q = `【4-3 特殊四邊形】某${shape}的兩條對角線長分別為 ${d1} 與 ${d2}，則其面積為多少？`;
                             a = `${area}`; d = [`${d1 * d2}`, `${(d1 + d2) * 2}`, `${area / 2}`];
                         } else if (type === 2) {
-                            // 菱形四邊等長與對角線垂直平分（畢氏定理）
                             const sets = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]];
                             const [half1, half2, side] = choice(sets);
                             q = `【4-3 特殊四邊形】菱形的兩條對角線長分別為 ${half1 * 2} 與 ${half2 * 2}，則此菱形的「周長」為多少？`;
                             a = `${side * 4}`; d = [`${side * 2}`, `${(half1 + half2) * 4}`, `${half1 * half2 * 2}`];
                         } else if (type === 3) {
-                            // 長方形、菱形、箏形、正方形的對角線性質判別
                             const item = choice([
                                 ['【4-3 特殊四邊形】下列哪一種四邊形的對角線「既互相垂直平分、又等長」？', '正方形', ['長方形', '菱形', '箏形']],
                                 ['【4-3 特殊四邊形】下列哪一種四邊形的對角線必定「等長且互相平分」，但不一定垂直？', '長方形(矩形)', ['菱形', '箏形', '平行四邊形']],
@@ -1467,7 +1617,6 @@
                             ]);
                             q = item[0]; a = item[1]; d = item[2];
                         } else {
-                            // 梯形兩腰中點連線（中線）與面積
                             const topB = randInt(4, 12), botB = topB + randInt(2, 6) * 2;
                             const mid = (topB + botB) / 2;
                             if (Math.random() < 0.6) {
@@ -1520,7 +1669,6 @@
                 }
                 case '9_1_3': {
                     if (sub === 1) { // 幾何推理證明
-                        const n = randInt(2, 7);
                         q = `任意兩個連續奇數 (2k-1) 與 (2k+1) 的和必為下列何者的倍數？`;
                         a = `4的倍數`; d = [`3的倍數`, `5的倍數`, `奇數`];
                     } else { // 三角形外心內心重心
@@ -1641,7 +1789,8 @@
             }
             
             isPlaying = true; score = 0; combo = 0; correctCount = 0; wrongCount = 0; questionCount = 0; timeLeft = 90;
-            wrongQuestionsLog = []; isFever = false;
+            wrongQuestionsLog = [];
+            setFeverVisual(false);
             
             document.getElementById('menu-screen').classList.add('hidden');
             document.getElementById('gameover-modal').classList.add('hidden');
@@ -1651,6 +1800,7 @@
             
             updateScoreUI();
             document.getElementById('timer-display').innerText = timeLeft;
+            startBgmLoop();
             
             clearInterval(gameTimerInterval);
             gameTimerInterval = setInterval(() => {
@@ -1739,8 +1889,9 @@
                     document.getElementById(`mole-${h}`).classList.add('up');
                 }
 
+                // 慢速 5000ms (5秒)、標準 3500ms (3.5秒)、快速 2000ms (2秒)
                 const speedVal = document.getElementById('speed-select').value;
-                let stayMs = speedVal === 'fast' ? 2500 : (speedVal === 'slow' ? 4500 : 3500);
+                let stayMs = speedVal === 'fast' ? 2000 : (speedVal === 'slow' ? 5000 : 3500);
                 if (isFever) stayMs *= 0.8;
                 moleSpawnTimeout = setTimeout(() => spawnMolesWave(), stayMs);
             }, 300);
@@ -1762,25 +1913,31 @@
                 document.getElementById('q-feedback').innerText = '⏳ 時間 +10 秒！'; return;
             }
             if(state.type === 'bomb') {
-                playTone('bomb'); timeLeft = Math.max(0, timeLeft-5); score = Math.max(0, score-15); combo = 0; isFever = false;
-                document.getElementById('game-stage').classList.remove('fever-active');
+                playTone('bomb'); timeLeft = Math.max(0, timeLeft-5); score = Math.max(0, score-15); combo = 0;
+                clearTimeout(feverTimeout);
+                setFeverVisual(false);
                 updateScoreUI(); document.getElementById('q-feedback').innerText = '💥 扣 15 分並扣 5 秒！'; return;
             }
 
             if(state.isCorrect) {
                 playTone('correct'); correctCount++; combo++;
+                let justEnteredFever = false;
                 if(combo >= 5 && !isFever) {
-                    isFever = true; document.getElementById('game-stage').classList.add('fever-active');
-                    clearTimeout(feverTimeout); feverTimeout = setTimeout(() => { isFever=false; document.getElementById('game-stage').classList.remove('fever-active'); }, 10000);
-                    showToast('🔥 進入狂熱模式：得分雙倍！');
+                    justEnteredFever = true;
+                    setFeverVisual(true);
+                    clearTimeout(feverTimeout);
+                    feverTimeout = setTimeout(() => { setFeverVisual(false); }, 10000);
                 }
                 const pts = (10 + (combo>=3?5:0)) * (isFever?2:1);
                 score += pts; updateScoreUI();
-                document.getElementById('q-feedback').innerText = `✅ 答對了 +${pts} 分！`;
+                document.getElementById('q-feedback').innerText = justEnteredFever
+                    ? `🔥 啟動狂熱模式：得分雙倍！ (+${pts} 分)`
+                    : `✅ 答對了 +${pts} 分！`;
                 clearTimeout(moleSpawnTimeout); setTimeout(()=>nextQuestion(), 400);
             } else {
-                playTone('wrong'); wrongCount++; combo = 0; score = Math.max(0, score-5); isFever = false;
-                document.getElementById('game-stage').classList.remove('fever-active');
+                playTone('wrong'); wrongCount++; combo = 0; score = Math.max(0, score-5);
+                clearTimeout(feverTimeout);
+                setFeverVisual(false);
                 updateScoreUI();
                 if(!wrongQuestionsLog.some(w => w.q === currentQuestion.q)) {
                     wrongQuestionsLog.push({
@@ -1803,7 +1960,12 @@
         }
 
         function endGame() {
-            isPlaying = false; clearInterval(gameTimerInterval); clearTimeout(moleSpawnTimeout);
+            isPlaying = false;
+            clearInterval(gameTimerInterval);
+            clearTimeout(moleSpawnTimeout);
+            clearTimeout(feverTimeout);
+            stopBgmLoop();
+            setFeverVisual(false);
             
             // 紀錄本機最高分
             const bestKey = `best_${selectedGrade}`;
@@ -1828,6 +1990,9 @@
             isPlaying = false;
             clearInterval(gameTimerInterval);
             clearTimeout(moleSpawnTimeout);
+            clearTimeout(feverTimeout);
+            stopBgmLoop();
+            setFeverVisual(false);
             document.getElementById('play-screen').classList.add('hidden');
             document.getElementById('play-screen').classList.remove('flex');
             document.getElementById('gameover-modal').classList.add('hidden');
